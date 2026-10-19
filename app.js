@@ -115,8 +115,8 @@ const ICON_ART=Object.assign(Object.create(null),{
  "☀️": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 36 36\"><path fill=\"#FFAC33\" d=\"M16 2s0-2 2-2 2 2 2 2v2s0 2-2 2-2-2-2-2V2zm18 14s2 0 2 2-2 2-2 2h-2s-2 0-2-2 2-2 2-2h2zM4 16s2 0 2 2-2 2-2 2H2s-2 0-2-2 2-2 2-2h2zm5.121-8.707s1.414 1.414 0 2.828-2.828 0-2.828 0L4.878 8.708s-1.414-1.414 0-2.829c1.415-1.414 2.829 0 2.829 0l1.414 1.414zm21 21s1.414 1.414 0 2.828-2.828 0-2.828 0l-1.414-1.414s-1.414-1.414 0-2.828 2.828 0 2.828 0l1.414 1.414zm-.413-18.172s-1.414 1.414-2.828 0 0-2.828 0-2.828l1.414-1.414s1.414-1.414 2.828 0 0 2.828 0 2.828l-1.414 1.414zm-21 21s-1.414 1.414-2.828 0 0-2.828 0-2.828l1.414-1.414s1.414-1.414 2.828 0 0 2.828 0 2.828l-1.414 1.414zM16 32s0-2 2-2 2 2 2 2v2s0 2-2 2-2-2-2-2v-2z\"/><circle fill=\"#FFAC33\" cx=\"18\" cy=\"18\" r=\"10\"/></svg>",
  "🌇": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 36 36\"><path fill=\"#FFCC4D\" d=\"M32 0H4C1.791 0 0 1.791 0 4v28h36V4c0-2.209-1.791-4-4-4z\"/><path fill=\"#F4900C\" d=\"M32.114 16.736c1.587-.451 1.587-1.147.001-1.599l-.559-.154L31 14.82v.005l-2.94-.891L30.383 12h-.014l.493-.322.497-.359c1.291-1.023 1.008-1.686-.629-1.498l-.636.089-.632.09h-.002l-2.979.339 1.77-3.18.309-.558c.802-1.44.281-1.963-1.158-1.163l-.558.282-.556.28h-.002L23.66 7.489 24 4.542v-.003l.08-.632.077-.638c.188-1.634-.492-1.915-1.516-.623l-.394.499-2.257 2.851-.819-2.881-.002-.005-.348-1.225c-.451-1.587-1.19-1.587-1.642 0l-.174.612-.174.613-.821 2.886-1.861-2.35-.001-.001-.395-.499-.397-.501c-1.023-1.29-1.704-1.007-1.515.629l.074.634.073.632v.001l.346 2.979-3.177-1.77-.557-.311c-1.441-.802-1.963-.28-1.161 1.161l.31.556 1.77 3.177-2.979-.346h-.001l-.632-.073-.635-.074c-1.636-.189-1.918.492-.629 1.515l.501.397.499.395.001.001 2.35 1.861-2.884.822-.612.174-.612.174c-1.587.452-1.587 1.19 0 1.642l1.225.348.004.002 2.881.819-2.851 2.258-.499.396c-1.292 1.023-1.011 1.705.623 1.517l.638-.08.632-.081h.002l2.948-.34L8 24.286v.002l-.28.556-.296.559c-.8 1.44-.271 1.96 1.169 1.158l.56-.309 3.185-1.77L12 27.46v.002l-.08.632-.077.635c-.189 1.637.491 1.918 1.514.627l.396-.5.395-.5 1.862-2.352.82 2.885v.001l.174.612.175.613c.452 1.586 1.105 1.586 1.557-.001L19 28.89v-.004l.905-2.882 1.905 2.352.416.5.407.5c1.022 1.29 1.71 1.01 1.521-.625l-.078-.637-.076-.633v-.003l-.34-2.947L26.284 26h.002l.557.28.558.295c1.44.803 1.963.273 1.16-1.167l-.28-.56L28 24.29v-.002l-1.489-2.628 2.947.34h.003l.633.08.637.077c1.635.188 1.915-.492.625-1.515l-.5-.395-.5-.395-2.352-1.947L30.886 17h.004l1.224-.264z\"/><circle fill=\"#FFE8B6\" cx=\"18\" cy=\"16\" r=\"9.63\"/><path fill=\"#485359\" d=\"M10 36V15l4-4h2l4 4v21zm23-17c0-1-1-1-1-1h-7s-1 0-1 1v17h9V19z\"/><path fill=\"#292F33\" d=\"M28 25c0-1-1-1-1-1h-8c-1 0-1 1-1 1v11h10V25zm-17 2H6v-5s0-1-1-1H0v11c0 2.209 1.791 4 4 4h8v-8s0-1-1-1zm21 4c-1 0-1 1-1 1v4h1c2.209 0 4-1.791 4-4v-1h-4z\"/><path d=\"M8 29h2v2H8zm-2 4h2v2H6zm10-16h2v2h-2zm0 4h2v2h-2zm-2 4h2v2h-2zm10 1h2v2h-2zm-2 4h2v2h-2zm7-10h2v2h-2zm0 4h2v2h-2z\" fill=\"#FFCC4D\"/></svg>"
 });
-const ICON_LABELS={"🍽️": "Meal", "🥣": "Bowl", "🥄": "Spoon", "🥛": "Milk", "🍎": "Apple", "🍌": "Banana", "🥕": "Carrot", "🥪": "Snack", "🍞": "Bread", "🍳": "Cooking", "🪥": "Teeth", "🚽": "Toilet", "🛁": "Bath", "🚿": "Shower", "🧼": "Soap", "🤲": "Wash hands", "🧴": "Lotion", "🧻": "Toilet paper", "🪮": "Comb", "💧": "Water", "👕": "Clothes", "👖": "Trousers", "👗": "Dress", "🧦": "Socks", "👟": "Shoes", "🧥": "Coat", "🧤": "Gloves", "🧢": "Cap", "🧹": "Cleaning", "🧺": "Laundry", "🪣": "Bucket", "🗑️": "Rubbish", "🧽": "Sponge", "🧰": "Tools", "🪴": "Water plants", "🏠": "Home", "🎒": "Backpack", "✏️": "Pencil", "📝": "Homework", "📚": "Textbooks", "📖": "Book", "📐": "Ruler", "🖍️": "Crayon", "🎨": "Painting", "🐶": "Dog", "🐱": "Cat", "🐹": "Hamster", "🐰": "Rabbit", "🐟": "Fish", "🐢": "Turtle", "🐦": "Bird", "🐾": "Paws", "🧸": "Teddy", "🧩": "Puzzle", "⚽": "Ball", "🚲": "Bicycle", "🎵": "Music", "🎲": "Game", "🎮": "Video game", "🪁": "Kite", "🎻": "Violin", "🏊": "Swimming", "🛏️": "Bed", "🌙": "Moon", "⭐": "Star", "🙏": "Prayer", "💤": "Sleep", "⏰": "Alarm", "🛋️": "Sofa", "💛": "Heart", "💊": "Medicine", "🩹": "Plaster", "🩺": "Checkup", "🌡️": "Thermometer", "💉": "Injection", "🏥": "Hospital", "⚕️": "Health care", "🫀": "Heart organ", "🫁": "Breathing", "😷": "Mask", "🩼": "Crutch", "🧘": "Meditation"};
-const ICON_CATEGORY_LABELS={"all": "All", "food": "Food", "hygiene": "Hygiene", "clothes": "Clothes", "tidying": "Tidying", "school": "School", "pets": "Pets", "fun": "Fun", "rest": "Rest", "health": "Health"};
+const ICON_LABELS={"🍽️": "Jídlo", "🥣": "Miska", "🥄": "Lžíce", "🥛": "Mléko", "🍎": "Jablko", "🍌": "Banán", "🥕": "Mrkev", "🥪": "Svačina", "🍞": "Chléb", "🍳": "Vaření", "🪥": "Zoubky", "🚽": "Záchod", "🛁": "Koupání", "🚿": "Sprcha", "🧼": "Mýdlo", "🤲": "Mytí rukou", "🧴": "Krém", "🧻": "Toaletní papír", "🪮": "Česání", "💧": "Voda", "👕": "Oblečení", "👖": "Kalhoty", "👗": "Šaty", "🧦": "Ponožky", "👟": "Boty", "🧥": "Bunda", "🧤": "Rukavice", "🧢": "Čepice", "🧹": "Úklid", "🧺": "Prádlo", "🪣": "Kbelík", "🗑️": "Odpadky", "🧽": "Houbička", "🧰": "Nářadí", "🪴": "Zalévání", "🏠": "Domov", "🎒": "Batoh", "✏️": "Tužka", "📝": "Úkoly", "📚": "Učebnice", "📖": "Kniha", "📐": "Pravítko", "🖍️": "Pastelka", "🎨": "Malování", "🐶": "Pejsek", "🐱": "Kočička", "🐹": "Křeček", "🐰": "Králíček", "🐟": "Rybička", "🐢": "Želva", "🐦": "Ptáček", "🐾": "Tlapky", "🧸": "Medvídek", "🧩": "Puzzle", "⚽": "Míč", "🚲": "Kolo", "🎵": "Hudba", "🎲": "Hra", "🎮": "Videohra", "🪁": "Drak", "🎻": "Housle", "🏊": "Plavání", "🛏️": "Postel", "🌙": "Měsíc", "⭐": "Hvězda", "🙏": "Modlitba", "💤": "Spánek", "⏰": "Budík", "🛋️": "Pohovka", "💛": "Srdíčko", "💊": "Léky", "🩹": "Náplast", "🩺": "Vyšetření", "🌡️": "Teploměr", "💉": "Injekce", "🏥": "Nemocnice", "⚕️": "Zdravotní péče", "🫀": "Srdce", "🫁": "Dýchání", "😷": "Rouška", "🩼": "Berle", "🧘": "Meditace"};
+const ICON_CATEGORY_LABELS={"all": "Vše", "food": "Jídlo", "hygiene": "Hygiena", "clothes": "Oblečení", "tidying": "Úklid", "school": "Škola", "pets": "Zvířátka", "fun": "Zábava", "rest": "Odpočinek", "health": "Zdraví"};
 const PARTICLE_ART=Object.assign(Object.create(null),{
  '✦':'<path fill="currentColor" d="M18 0l5 13 13 5-13 5-5 13-5-13L0 18l13-5z"/>',
  '✧':'<path fill="none" stroke="currentColor" stroke-width="2" d="M18 2l5 11 11 5-11 5-5 11-5-11-11-5 11-5z"/>',
@@ -138,7 +138,7 @@ function uiIcon(name){
 }
 // Keep browser-facing code compatible with Firefox 68 (Android 4.4).
 function replaceChildren(parent,children=[]){parent.textContent='';children.forEach(child=>parent.appendChild(child));}
-function readFile(file){return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=()=>reject(new Error('Could not read the file.'));reader.readAsText(file);});}
+function readFile(file){return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=()=>reject(new Error('Soubor se nepodařilo přečíst.'));reader.readAsText(file);});}
 const settings=$('settings-dialog'),shiftDialog=$('shift-dialog'),iconDialog=$('icon-dialog'),profileDialog=$('profile-dialog'),choresDialog=$('chores-dialog'),nativeDialog=typeof settings.showModal==='function';
 if(!nativeDialog)for(const dialog of [settings,shiftDialog,iconDialog,profileDialog,choresDialog])dialog.classList.add('dialog-fallback');
 function showDialog(dialog){
@@ -155,7 +155,7 @@ function openSettings(){if(profileDialog.open)closeProfile();importDraft=null;$(
 function closeSettings(){importDraft=null;hideDialog(settings,'profile-open');}
 function closeShift(){hideDialog(shiftDialog,'profile-open');}
 function closeProfile(){hideDialog(profileDialog,'profile-open');}
-function openChores(){if(profileDialog.open)closeProfile();importDraft=null;populateEditor(config);$('chores-error').hidden=true;$('chores-title').textContent='Chores · '+R.PROFILE_NAMES[state.activeProfileId];showDialog(choresDialog);}
+function openChores(){if(profileDialog.open)closeProfile();importDraft=null;populateEditor(config);$('chores-error').hidden=true;$('chores-title').textContent='Úkoly · '+R.PROFILE_NAMES[state.activeProfileId];showDialog(choresDialog);}
 function closeChores(){hideDialog(choresDialog,'profile-open');}
 function closeActiveDialog(){if(profileDialog.open)closeProfile();else if(iconDialog.open)closeIconPicker();else if(shiftDialog.open)closeShift();else if(choresDialog.open||settings.open)saveAndCloseSettings();}
 $('settings-backdrop').addEventListener('click',closeActiveDialog);
@@ -183,12 +183,12 @@ function save(){
 function load(){
  state=R.freshState();blockedStorage=false;
  try{const raw=localStorage.getItem(KEY);if(raw)state=R.validateState(JSON.parse(raw));}
- catch(error){blockedStorage=true;$('storage-warning').textContent='Stored data uses an old or unsupported format and has been preserved. In Settings, import a converted backup of all profiles.';$('storage-warning').hidden=false;}
+ catch(error){blockedStorage=true;$('storage-warning').textContent='Uložená data jsou ve starém nebo nepodporovaném formátu. Zůstávají zachovaná. V Nastavení načtěte převedenou zálohu všech profilů.';$('storage-warning').hidden=false;}
  selectState();
 }
-function formatTime(time,format=config.format){const[h,m]=time.split(':').map(Number);return format==='24'?time:`${h%12||12}:${String(m).padStart(2,'0')} ${h<12?'AM':'PM'}`;}
+function formatTime(time,format=config.format){const[h,m]=time.split(':').map(Number);return format==='24'?time:`${h%12||12}:${String(m).padStart(2,'0')} ${h<12?'dop.':'odp.'}`;}
 function timeString(m){return `${String(Math.floor(m/60)).padStart(2,'0')}:${String(Math.floor(m%60)).padStart(2,'0')}`;}
-function digits(time){return escape(formatTime(time)).replace(/ (AM|PM)$/,'<small>$1</small>');}
+function digits(time){return escape(formatTime(time)).replace(/ (dop\.|odp\.)$/,'<small>$1</small>');}
 function clockSvg(hour,minute){
  let ticks='',numbers='';for(let i=0;i<60;i++){const a=i*Math.PI/30,r=i%5===0?83:88;ticks+=`<line x1="${100+Math.sin(a)*r}" y1="${100-Math.cos(a)*r}" x2="${100+Math.sin(a)*92}" y2="${100-Math.cos(a)*92}" stroke="${i%5===0?'#7c8d70':'#c5cebc'}" stroke-width="${i%5===0?2:1}"/>`;}
  for(let i=1;i<=12;i++){const a=i*Math.PI/6;numbers+=`<text x="${100+Math.sin(a)*68}" y="${107-Math.cos(a)*68}" text-anchor="middle">${i}</text>`;}
@@ -200,8 +200,8 @@ function rangeClock(chore){
  const shade=sector.full?'<circle class="range-sector" cx="100" cy="100" r="82" fill="#b8d9bb"/>':`<path class="range-sector" d="${sector.path}" fill="#b8d9bb"/>`;
  const circleEnd=svg.indexOf('/>')+2;svg=svg.slice(0,circleEnd)+shade+svg.slice(circleEnd);
  svg=svg.replace('<circle cx="100" cy="100" r="6"',`<line class="range-end-hand" x1="100" y1="100" x2="100" y2="24" transform="rotate(${sector.endAngle} 100 100)" stroke="#b46a36" stroke-width="5" stroke-linecap="round"/><circle cx="100" cy="100" r="6"`);
- const durationLabel=duration>=60?`${Math.floor(duration/60)}h${duration%60?` ${duration%60}m`:''}`:`${duration} min`;
- return `<span class="range-clock"><span class="mini-clock" role="img" aria-label="${escape(formatTime(chore.start))} to ${escape(formatTime(chore.end))}, ${duration} minutes">${svg}</span><span class="range-digits"><span class="range-start">${digits(chore.start)}</span><span aria-hidden="true"> – </span><span class="range-end">${digits(chore.end)}</span></span><span class="range-duration">${durationLabel}</span></span>`;
+ const durationLabel=duration>=60?`${Math.floor(duration/60)} h${duration%60?` ${duration%60} min`:''}`:`${duration} min`;
+ return `<span class="range-clock"><span class="mini-clock" role="img" aria-label="${escape(formatTime(chore.start))} až ${escape(formatTime(chore.end))}, délka ${duration} min">${svg}</span><span class="range-digits"><span class="range-start">${digits(chore.start)}</span><span aria-hidden="true"> – </span><span class="range-end">${digits(chore.end)}</span></span><span class="range-duration">${durationLabel}</span></span>`;
 }
 function timelineTicks(){
  const boundaries=new Set(layout.segments.flatMap(s=>[s.start,s.end])),candidates=[...boundaries];
@@ -290,27 +290,27 @@ function render(now){
  timingProfile=state.activeProfileId;
  layout=R.timeline(todayConfig);const focused=document.activeElement&&document.activeElement.dataset&&document.activeElement.dataset.key;
  $('schedule').style.setProperty('--kid-count',config.kids.length);$('timeline').style.height=oldTimelineHeight||`${layout.height}px`;
- $('column-heads').innerHTML='<div class="axis-head" aria-hidden="true">'+uiIcon('clock')+'</div><div class="chore-column-head">Chore · '+escape(R.PROFILE_NAMES[state.activeProfileId])+'</div>'+config.kids.map((kid,i)=>{const chores=assigned(kid.id),n=chores.filter(c=>done(kid.id,c.id)).length;return `<div class="kid-head" style="${kidStyle(kid,i)}"><div class="kid-name-wrap"><div class="kid-name">${escape(kid.name)}</div><div class="kid-progress" role="progressbar" aria-label="${escape(kid.name)}’s chores" aria-valuemin="0" aria-valuemax="${chores.length||1}" aria-valuenow="${n}" aria-valuetext="${n} of ${chores.length}"><i style="width:${chores.length?n/chores.length*100:0}%"></i></div><span class="kid-score">${n}/${chores.length}${chores.length&&n===chores.length?uiIcon('check'):''}</span></div></div>`;}).join('');
- $('profile-open').title='Menu: '+R.PROFILE_NAMES[state.activeProfileId];$('profile-open').setAttribute('aria-label','Open menu: '+R.PROFILE_NAMES[state.activeProfileId]);
- if(!config.chores.length){for(const map of Object.values(timelineMarks)){for(const node of map.values())node.remove();map.clear();}$('time-axis').textContent='';$('kid-columns').innerHTML='<div class="empty-profile"><p>This profile has no chores yet.</p><button type="button" class="primary-button" id="empty-add">Add chores</button></div>';$('empty-add').addEventListener('click',openChores);$('timeline').style.height='220px';$('profile-open').title='Menu: '+R.PROFILE_NAMES[state.activeProfileId];$('profile-open').setAttribute('aria-label','Open menu: '+R.PROFILE_NAMES[state.activeProfileId]);renderingTimeline=false;return;}
+ $('column-heads').innerHTML='<div class="axis-head" aria-hidden="true">'+uiIcon('clock')+'</div><div class="chore-column-head">Úkol · '+escape(R.PROFILE_NAMES[state.activeProfileId])+'</div>'+config.kids.map((kid,i)=>{const chores=assigned(kid.id),n=chores.filter(c=>done(kid.id,c.id)).length;return `<div class="kid-head" style="${kidStyle(kid,i)}"><div class="kid-name-wrap"><div class="kid-name">${escape(kid.name)}</div><div class="kid-progress" role="progressbar" aria-label="Úkoly: ${escape(kid.name)}" aria-valuemin="0" aria-valuemax="${chores.length||1}" aria-valuenow="${n}" aria-valuetext="${n} z ${chores.length}"><i style="width:${chores.length?n/chores.length*100:0}%"></i></div><span class="kid-score">${n}/${chores.length}${chores.length&&n===chores.length?uiIcon('check'):''}</span></div></div>`;}).join('');
+ $('profile-open').title='Menu: '+R.PROFILE_NAMES[state.activeProfileId];$('profile-open').setAttribute('aria-label','Otevřít menu: '+R.PROFILE_NAMES[state.activeProfileId]);
+ if(!config.chores.length){for(const map of Object.values(timelineMarks)){for(const node of map.values())node.remove();map.clear();}$('time-axis').textContent='';$('kid-columns').innerHTML='<div class="empty-profile"><p>V tomto profilu zatím nejsou žádné úkoly.</p><button type="button" class="primary-button" id="empty-add">Přidat úkoly</button></div>';$('empty-add').addEventListener('click',openChores);$('timeline').style.height='220px';$('profile-open').title='Menu: '+R.PROFILE_NAMES[state.activeProfileId];$('profile-open').setAttribute('aria-label','Otevřít menu: '+R.PROFILE_NAMES[state.activeProfileId]);renderingTimeline=false;return;}
  $('kid-columns').innerHTML=layout.rows.map(row=>{
   const chore=todayConfig.chores.find(c=>c.id===row.id),complete=chore.kidIds.every(k=>done(k,chore.id)),state=R.status(chore,now,complete),timing=previous[chore.id]||{visible:timings[chore.id]!=='hidden',late:timings[chore.id]==='overdue'};
-  return `<div class="routine-row ${state}" data-id="${escape(chore.id)}" style="top:${previousRows[row.id]?previousRows[row.id].top:(row.top+4)+'px'};height:${previousRows[row.id]?previousRows[row.id].height:(row.height-8)+'px'}"><div class="shared-chore"><div class="shared-chore-content"><span class="chore-icon" aria-hidden="true">${iconMarkup(chore.icon)}</span><span class="chore-heading"><span class="chore-title">${escape(chore.title)}</span></span><span class="chore-timing${timing.visible?' timing-visible':''}${timing.late?' timing-overdue':''}" data-id="${escape(chore.id)}" aria-hidden="${!timing.visible}">${rangeClock(chore)}</span></div></div>${config.kids.map((kid,i)=>{const included=chore.kidIds.includes(kid.id),checked=included&&done(kid.id,chore.id);return `<div class="kid-cell${included?'':' unassigned'}${checked?' checked':''}" style="${kidStyle(kid,i)}">${included?`<label class="check-target"><input class="child-check" type="checkbox" data-kid="${escape(kid.id)}" data-id="${escape(chore.id)}" data-key="${escape(R.completionKey(kid.id,chore.id))}"${checked?' checked':''} aria-label="${escape(kid.name)}: ${escape(chore.title)}, ${escape(formatTime(chore.start))} to ${escape(formatTime(chore.end))}"></label>`:`<span class="not-assigned" aria-label="${escape(kid.name)}: not assigned">—</span>`}</div>`;}).join('')}</div>`;
+  return `<div class="routine-row ${state}" data-id="${escape(chore.id)}" style="top:${previousRows[row.id]?previousRows[row.id].top:(row.top+4)+'px'};height:${previousRows[row.id]?previousRows[row.id].height:(row.height-8)+'px'}"><div class="shared-chore"><div class="shared-chore-content"><span class="chore-icon" aria-hidden="true">${iconMarkup(chore.icon)}</span><span class="chore-heading"><span class="chore-title">${escape(chore.title)}</span></span><span class="chore-timing${timing.visible?' timing-visible':''}${timing.late?' timing-overdue':''}" data-id="${escape(chore.id)}" aria-hidden="${!timing.visible}">${rangeClock(chore)}</span></div></div>${config.kids.map((kid,i)=>{const included=chore.kidIds.includes(kid.id),checked=included&&done(kid.id,chore.id);return `<div class="kid-cell${included?'':' unassigned'}${checked?' checked':''}" style="${kidStyle(kid,i)}">${included?`<label class="check-target"><input class="child-check" type="checkbox" data-kid="${escape(kid.id)}" data-id="${escape(chore.id)}" data-key="${escape(R.completionKey(kid.id,chore.id))}"${checked?' checked':''} aria-label="${escape(kid.name)}: ${escape(chore.title)}, ${escape(formatTime(chore.start))} až ${escape(formatTime(chore.end))}"></label>`:`<span class="not-assigned" aria-label="${escape(kid.name)}: nepřiřazeno">—</span>`}</div>`;}).join('')}</div>`;
  }).join('');
  applyCheckboxLocks();
  // Commit the previous visibility before changing it, so rebuilt rows can also animate.
  void $('kid-columns').offsetWidth;updateChoreTimings(now);renderingTimeline=false;fitTimeline(now);updateTimelineMarks();
  if(focused){const previous=[...document.querySelectorAll('.child-check')].find(b=>b.dataset.key===focused);if(previous)previous.focus({preventScroll:true});}
 }
-function updateNow(now){if(!layout||!config.chores.length){$('now-marker').hidden=true;return;}const marker=$('now-marker');marker.hidden=now<layout.start||now>layout.end;if(!marker.hidden){marker.style.top=`${R.position(layout,now)}px`;$('now-label').innerHTML=`NOW<br>${digits(timeString(now))}`;}}
+function updateNow(now){if(!layout||!config.chores.length){$('now-marker').hidden=true;return;}const marker=$('now-marker');marker.hidden=now<layout.start||now>layout.end;if(!marker.hidden){marker.style.top=`${R.position(layout,now)}px`;$('now-label').innerHTML=`TEĎ<br>${digits(timeString(now))}`;}}
 function tick(force=false){
  const date=new Date(),now=R.timeOfDay(date),day=R.dayKey(date);if(progress.day!==day){progress=R.freshProgress(date);save();force=true;}
  todayConfig=R.effectiveConfig(config,progress,date);
- const time=timeString(now);$('digital-time').innerHTML=digits(time);const clock=$('main-clock');if(!clock.firstChild)clock.innerHTML=clockSvg(date.getHours(),date.getMinutes());clock.setAttribute('role','img');clock.setAttribute('aria-label',`Current time ${formatTime(time)}`);clock.querySelector('.hour-hand').setAttribute('transform',`rotate(${date.getHours()%12*30+date.getMinutes()*.5+date.getSeconds()/120} 100 100)`);clock.querySelector('.minute-hand').setAttribute('transform',`rotate(${date.getMinutes()*6+date.getSeconds()*.1} 100 100)`);
+ const time=timeString(now);$('digital-time').innerHTML=digits(time);const clock=$('main-clock');if(!clock.firstChild)clock.innerHTML=clockSvg(date.getHours(),date.getMinutes());clock.setAttribute('role','img');clock.setAttribute('aria-label',`Aktuální čas ${formatTime(time)}`);clock.querySelector('.hour-hand').setAttribute('transform',`rotate(${date.getHours()%12*30+date.getMinutes()*.5+date.getSeconds()/120} 100 100)`);clock.querySelector('.minute-hand').setAttribute('transform',`rotate(${date.getMinutes()*6+date.getSeconds()*.1} 100 100)`);
  const stamp=`${day}-${state.activeProfileId}`;if(force||stamp!==renderStamp){render(now);renderStamp=stamp;}
  if(shiftDialog.open&&shiftPreviewStamp!==time){refreshShiftPreview();shiftPreviewStamp=time;}
  updateNow(now);updateChoreTimings(now);
- const active=todayConfig.chores.some(c=>R.onTime(c,now)&&c.kidIds.some(k=>!done(k,c.id))),next=todayConfig.chores.find(c=>R.minutes(c.start)>now&&c.kidIds.some(k=>!done(k,c.id))),left=next?Math.ceil(R.minutes(next.start)-now):0;$('starts-in').textContent=!active&&next?`${formatTime(next.start)} · ${left>=60?`${Math.floor(left/60)}h `:''}${left%60}m`:'';
+ const active=todayConfig.chores.some(c=>R.onTime(c,now)&&c.kidIds.some(k=>!done(k,c.id))),next=todayConfig.chores.find(c=>R.minutes(c.start)>now&&c.kidIds.some(k=>!done(k,c.id))),left=next?Math.ceil(R.minutes(next.start)-now):0;$('starts-in').textContent=!active&&next?`${formatTime(next.start)} · ${left>=60?`${Math.floor(left/60)} h `:''}${left%60} min`:'';
 }
 function jumpNow(){if(!layout||!config.chores.length)return;const now=R.timeOfDay(new Date()),target=(now<layout.start?R.minutes(todayConfig.chores[0].start):(now>layout.end?R.minutes(todayConfig.chores[todayConfig.chores.length-1].start):now));$('schedule-scroll').scrollTo({top:Math.max(0,R.position(layout,target)-90),behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});}
 $('jump-now').addEventListener('click',jumpNow);
@@ -322,7 +322,7 @@ function refreshCompletionView(kidId,choreId){
   for(const box of row.querySelectorAll('.child-check')){box.checked=done(box.dataset.kid,choreId);box.closest('.kid-cell').classList.toggle('checked',box.checked);}
  }
  const index=config.kids.findIndex(kid=>kid.id===kidId),head=document.querySelectorAll('.kid-head')[index];
- if(head){const chores=assigned(kidId),n=chores.filter(ch=>done(kidId,ch.id)).length,bar=head.querySelector('.kid-progress');bar.setAttribute('aria-valuenow',String(n));bar.setAttribute('aria-valuetext',`${n} of ${chores.length}`);bar.querySelector('i').style.width=(chores.length?n/chores.length*100:0)+'%';head.querySelector('.kid-score').innerHTML=n+'/'+chores.length+(chores.length&&n===chores.length?uiIcon('check'):'');}
+ if(head){const chores=assigned(kidId),n=chores.filter(ch=>done(kidId,ch.id)).length,bar=head.querySelector('.kid-progress');bar.setAttribute('aria-valuenow',String(n));bar.setAttribute('aria-valuetext',`${n} z ${chores.length}`);bar.querySelector('i').style.width=(chores.length?n/chores.length*100:0)+'%';head.querySelector('.kid-score').innerHTML=n+'/'+chores.length+(chores.length&&n===chores.length?uiIcon('check'):'');}
 }
 const TAP_GUARD_MS=2000;
 const checkboxLocks=new Set();
@@ -368,7 +368,7 @@ $('kid-columns').addEventListener('change',event=>{
  const flags=R.celebrationFlags(todayConfig,progress,kidId,choreId,R.timeOfDay(date));
  const result=R.assignCelebration(config,progress,kidId,choreId,flags,date);
  progress=result.progress;save();refreshCompletionView(kidId,choreId);tick();
- if(config.celebrations)queueCelebration(result.celebration,kid.name,key);else notify(`${kid.name}: done!`);
+ if(config.celebrations)queueCelebration(result.celebration,kid.name,key);else notify(`${kid.name}: hotovo!`);
 });
 $('kid-columns').addEventListener('click',event=>{
  const label=event.target.closest('.check-target');
@@ -376,28 +376,28 @@ $('kid-columns').addEventListener('click',event=>{
  if(label&&label.querySelector('.child-check').disabled)event.preventDefault();
 },true);
 const celebrationThemes=[
- ['🌟','A little star!','Look at you shine.','✦','burst'],['🦋','Look at you grow!','One lovely step at a time.','🦋','float'],['🎈','Up, up, hooray!','You did your little step.','🎈','float'],['🌸','Beautifully done!','Our evening is blooming.','🌸','rain'],['🚀','You’re soaring!','A little closer to dreamland.','✧','burst'],['🐝','What a busy bee!','Time for a happy little wiggle.','🐝','orbit'],['🌈','A splash of happy!','You made this moment brighter.','●','rain'],['✨','Sparkle time!','Look at that little win.','✦','orbit'],['🐸','Hip, hip, hop!','You did it. Give a little hop!','●','bounce'],['🫧','Pop! Well done!','A bubbly little celebration.','○','float'],['🍓','Sweet little win!','That was berry well done.','🍓','rain'],['🌻','Hello, sunshine!','A little step. A happy heart.','✿','burst'],['🐞','Lucky little you!','Another step, all done.','🐞','bounce'],['🎉','Hooray for you!','A little cheer for a lovely effort.','▰','rain'],['🐠','Just keep swimming!','You’re doing swimmingly.','🐠','float'],['💛','A heart full of happy!','You can be proud of yourself.','♥','burst'],['🪁','Flying high!','Look how far you’ve come.','◆','orbit'],['🍂','A gentle little cheer!','One step closer to cozy.','🍂','rain'],['🐇','Hop to the happy!','A lovely little leap forward.','✧','bounce'],['🌙','Dreamland is closer!','You’re making a lovely evening.','★','float']
+ ['🌟','Hvězdička!','Ty ale záříš!','✦','burst'],['🦋','To je pokrok!','Krok za krokem se daří.','🦋','float'],['🎈','Třikrát hurá!','Další úkol je hotový.','🎈','float'],['🌸','Krásná práce!','Dnes se nám ale daří!','🌸','rain'],['🚀','Letíš jako raketa!','Do říše snů je to zase blíž.','✧','burst'],['🐝','Pilná včelka!','Čas na veselý taneček!','🐝','orbit'],['🌈','Duhová radost!','Hned je nám veseleji.','●','rain'],['✨','Čas zazářit!','To je malé vítězství!','✦','orbit'],['🐸','Žabí hop!','Je to! Teď si poskoč!','●','bounce'],['🫧','Bublinková paráda!','Bublinky na oslavu!','○','float'],['🍓','Sladké vítězství!','To se krásně povedlo!','🍓','rain'],['🌻','Sluníčko září!','Malý krok, velká radost.','✿','burst'],['🐞','Beruščí radost!','Další úkol je hotový.','🐞','bounce'],['🎉','Velká paráda!','Za tu snahu patří potlesk!','▰','rain'],['🐠','Jen tak dál!','Plaveš v tom jako rybka!','🐠','float'],['💛','Srdíčko plné radosti!','To je důvod k hrdosti!','♥','burst'],['🪁','Vzhůru do oblak!','To je pořádný kus práce!','◆','orbit'],['🍂','Podzimní potlesk!','Zase o krok blíž k peřince.','🍂','rain'],['🐇','Králičí skok!','Krásný skok kupředu!','✧','bounce'],['🌙','Říše snů je blíž!','To je krásný večer!','★','float']
 ];
 const lateReminders=[
- 'Slow and steady… a little earlier next time!',
- 'Made it! Let’s beat the clock next time.',
- 'Next time, let’s try turtle turbo!',
- 'You did it! Keep an eye on the clock next time.',
- 'A little shell-powered speed next time?',
- 'Finished! Shall we race the clock next time?'
+ 'Pomalu, ale jistě… příště o chvilku dřív!',
+ 'Hotovo! Příště zkusíme předběhnout hodiny.',
+ 'Příště zapneme želví turbo!',
+ 'Máš hotovo! Příště mrkneme i na hodiny.',
+ 'Co příště trochu želvího zrychlení?',
+ 'Hotovo! Příště si s hodinami zazávodíme?'
 ];
 function celebrate(celebration=null,childName='') {
  cancelPendingCelebration();
  clearTimeout(toastTimer);$('toast').hidden=true;
  const choice=celebration||R.makeCelebration(),{grand,everyone,late}=choice,index=choice.theme,random=R.celebrationRandom(choice.seed);
  const daytime=state.activeProfileId!=='evening',theme=celebrationThemes[index].slice();
- if(daytime){if([3,4,17,19].includes(index))theme[2]='Every little step counts.';if(index===19)theme[1]='Another step, all done!';}
- let [icon,title,subtitle,particle,motion]=late?['🐢','','','🍃','float']:grand?['🏆','You did every little step!',daytime?'Great work!':'Big hugs. Sweet dreams. See you tomorrow!','✦','rain']:theme;
+ if(daytime){if([3,4,17,19].includes(index))theme[2]='Každý krok se počítá.';if(index===19)theme[1]='Další krok je hotový!';}
+ let [icon,title,subtitle,particle,motion]=late?['🐢','','','🍃','float']:grand?['🏆','Všechny úkoly jsou hotové!',daytime?'Výborná práce!':'Velké objetí a sladké sny! Zase zítra!','✦','rain']:theme;
  const layer=$('celebration');(nativeDialog&&settings.open ? settings : document.body).append(layer);layer.classList.toggle('grand',grand);layer.classList.toggle('late',late);layer.dataset.motion=motion;
  $('celebration-icon').innerHTML=iconMarkup(icon);
  const reminder=late?lateReminders[choice.reminder]:'';
- $('celebration-title').textContent=late?reminder:everyone?'Everyone: all done!':grand&&childName?`${childName}: all done!`:title;
- $('celebration-subtitle').textContent=late?(everyone?'Everyone: all done!':grand?`${childName}: all done!`:`${childName}, you finished!`):childName&&!grand?childName:'';
+ $('celebration-title').textContent=late?reminder:everyone?'Všichni mají hotovo!':grand&&childName?`${childName}: hotovo!`:title;
+ $('celebration-subtitle').textContent=late?(everyone?'Všichni mají hotovo!':grand?`${childName}: hotovo!`:`${childName}: hotovo!`):childName&&!grand?childName:'';
  layer.querySelector('.celebration-particles').innerHTML=Array.from({length:late?8:grand?64:30},(_,i)=>{const a=(i/(late?8:grand?64:30))*Math.PI*2,d=120+random()*300,colors=['#d8b35b','#a0b67e','#b19bc5','#d59678','#7ca6a1'];return `<span class="particle" style="--x:${Math.cos(a)*d}px;--y:${Math.sin(a)*d}px;--r:${180+random()*540}deg;--size:${24+random()*30}px;--color:${colors[i%colors.length]};--duration:${1.5+random()*1.3}s;--delay:${random()*.4}s">${iconMarkup(particle)}</span>`;}).join('');
  layer.hidden=false;
  celebrationDismissAfter=performance.now()+TAP_GUARD_MS;
@@ -411,15 +411,15 @@ $('celebration').addEventListener('click',dismissCelebrationFromInput);
 document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!$('celebration').hidden){event.preventDefault();dismissCelebrationFromInput();}});
 function kidRow(kid,index){
  const row=document.createElement('div');row.className='kid-editor-row';row.dataset.id=kid.id;row.style.cssText=kidStyle(kid,index);
- row.innerHTML=`<input class="kid-name-input" maxlength="30" value="${escape(kid.name)}" placeholder="Child’s name" aria-label="Child name" required><label class="kid-color-field"><span>Color</span><input class="kid-color" type="color" value="${escape(kid.color||R.KID_COLORS[index%R.KID_COLORS.length])}" aria-label="Child color" title="Choose this child’s color"></label><button type="button" class="delete-kid" aria-label="Remove child">${uiIcon('close')}</button>`;
+ row.innerHTML=`<input class="kid-name-input" maxlength="30" value="${escape(kid.name)}" placeholder="Jméno dítěte" aria-label="Jméno dítěte" required><label class="kid-color-field"><span>Barva</span><input class="kid-color" type="color" value="${escape(kid.color||R.KID_COLORS[index%R.KID_COLORS.length])}" aria-label="Barva dítěte" title="Vybrat barvu dítěte"></label><button type="button" class="delete-kid" aria-label="Odebrat dítě">${uiIcon('close')}</button>`;
  row.querySelector('.kid-name-input').addEventListener('input',refreshAssignments);
  row.querySelector('.kid-color').addEventListener('input',event=>{row.style.cssText=kidStyle({color:event.target.value});});
  row.querySelector('.delete-kid').addEventListener('click',()=>{row.remove();refreshAssignments();$('add-kid').disabled=$('kids-editor').children.length>=8;});return row;
 }
 function currentKids(){return [...$('kids-editor').children].map(row=>({id:row.dataset.id,name:row.querySelector('.kid-name-input').value,color:row.querySelector('.kid-color').value}));}
-function assignmentMarkup(ids){return '<legend>Children</legend>'+currentKids().map(k=>`<label class="assignment"><input type="checkbox" value="${escape(k.id)}"${ids.includes(k.id)?' checked':''}><span>${escape(k.name)||'Child'}</span></label>`).join('');}
+function assignmentMarkup(ids){return '<legend>Děti</legend>'+currentKids().map(k=>`<label class="assignment"><input type="checkbox" value="${escape(k.id)}"${ids.includes(k.id)?' checked':''}><span>${escape(k.name)||'Dítě'}</span></label>`).join('');}
 function refreshAssignments(){for(const field of document.querySelectorAll('.assignments')){const checked=[...field.querySelectorAll('input:checked')].map(i=>i.value);field.innerHTML=assignmentMarkup(checked);}}
-function editorRow(chore){const row=document.createElement('div');row.className='editor-row';row.dataset.id=chore.id;row.innerHTML=`<div class="edit-main"><div class="icon-field"><span>Icon</span><button type="button" class="edit-icon icon-picker" value="${escape(chore.icon)}" aria-label="Choose icon: ${escape(ICON_LABELS[chore.icon])}" aria-haspopup="dialog" aria-controls="icon-dialog">${iconMarkup(chore.icon)}${uiIcon('caret')}</button></div><label>Chore<input class="edit-title" maxlength="60" required value="${escape(chore.title)}" placeholder="Story" aria-label="Chore name"></label><label>From<input class="edit-start" type="time" required value="${escape(chore.start)}" aria-label="Start time"></label><label>To<input class="edit-end" type="time" required value="${escape(chore.end)}" aria-label="End time"></label><button type="button" class="delete-chore" aria-label="Remove chore">${uiIcon('close')}</button></div><fieldset class="assignments">${assignmentMarkup(chore.kidIds)}</fieldset>`;row.querySelector('.edit-icon').addEventListener('click',event=>openIconPicker(event.currentTarget));row.querySelector('.delete-chore').addEventListener('click',()=>{row.remove();updateAddButton();});return row;}
+function editorRow(chore){const row=document.createElement('div');row.className='editor-row';row.dataset.id=chore.id;row.innerHTML=`<div class="edit-main"><div class="icon-field"><span>Ikona</span><button type="button" class="edit-icon icon-picker" value="${escape(chore.icon)}" aria-label="Vybrat ikonu: ${escape(ICON_LABELS[chore.icon])}" aria-haspopup="dialog" aria-controls="icon-dialog">${iconMarkup(chore.icon)}${uiIcon('caret')}</button></div><label>Úkol<input class="edit-title" maxlength="60" required value="${escape(chore.title)}" placeholder="Pohádka" aria-label="Název úkolu"></label><label>Od<input class="edit-start" type="time" required value="${escape(chore.start)}" aria-label="Čas začátku"></label><label>Do<input class="edit-end" type="time" required value="${escape(chore.end)}" aria-label="Čas konce"></label><button type="button" class="delete-chore" aria-label="Odebrat úkol">${uiIcon('close')}</button></div><fieldset class="assignments">${assignmentMarkup(chore.kidIds)}</fieldset>`;row.querySelector('.edit-icon').addEventListener('click',event=>openIconPicker(event.currentTarget));row.querySelector('.delete-chore').addEventListener('click',()=>{row.remove();updateAddButton();});return row;}
 let iconPickerTarget=null;
 function renderIconChoices(category='all'){
  const icons=category==='all'?R.ICONS:R.ICON_CATEGORIES.find(group=>group.id===category).icons;
@@ -430,7 +430,7 @@ function renderIconChoices(category='all'){
 function openIconPicker(button){
  iconPickerTarget=button;
  const title=button.closest('.editor-row').querySelector('.edit-title').value.trim();
- $('icon-picker-title').textContent=title?'Icon: '+title:'Choose icon';
+ $('icon-picker-title').textContent=title?'Ikona: '+title:'Vybrat ikonu';
  $('icon-categories').innerHTML=['all',...R.ICON_CATEGORIES.map(group=>group.id)].map(id=>'<button type="button" data-category="'+id+'" aria-pressed="false">'+escape(ICON_CATEGORY_LABELS[id])+'</button>').join('');
  renderIconChoices();
  if(!nativeDialog){choresDialog.hidden=true;choresDialog.setAttribute('aria-hidden','true');}
@@ -447,7 +447,7 @@ $('icon-categories').addEventListener('click',event=>{const button=event.target.
 $('icon-choices').addEventListener('click',event=>{
  const button=event.target.closest('.icon-choice');if(!button||!iconPickerTarget)return;
  iconPickerTarget.value=button.value;iconPickerTarget.innerHTML=iconMarkup(button.value)+uiIcon('caret');
- iconPickerTarget.setAttribute('aria-label','Choose icon: '+ICON_LABELS[button.value]);
+ iconPickerTarget.setAttribute('aria-label','Vybrat ikonu: '+ICON_LABELS[button.value]);
  closeIconPicker();
 });
 $('icon-picker-cancel').addEventListener('click',closeIconPicker);
@@ -464,9 +464,9 @@ $('chores-form').addEventListener('submit',event=>event.preventDefault());
 $('settings-open').addEventListener('click',openSettings);
 function saveAndCloseSettings(){
  try{
-  if(blockedStorage&&!importDraft)throw Error('First import a converted backup in the new format. Your original data has been preserved.');
+  if(blockedStorage&&!importDraft)throw Error('Nejprve načtěte převedenou zálohu v novém formátu. Původní data zůstávají zachovaná.');
   const updated=readEditor(),next=R.editProfile(importDraft||state,updated);
-  state=next;blockedStorage=false;selectState();save();tick(true);dismissCelebration();if(choresDialog.open)closeChores();else closeSettings();notify('Saved');jumpNow();
+  state=next;blockedStorage=false;selectState();save();tick(true);dismissCelebration();if(choresDialog.open)closeChores();else closeSettings();notify('Uloženo');jumpNow();
  }catch(error){settingsError(error);}
 }
 const PROFILE_ICONS={"morning":"🌅","forenoon":"🌤️","noon":"☀️","afternoon":"🌇","evening":"🌙"};
@@ -487,12 +487,12 @@ function refreshShiftPreview(){
  const current=R.cleanProgress(progress,config,date);
  undo.hidden=!Object.prototype.hasOwnProperty.call(current,'undoOffsets');undo.disabled=false;
  $('shift-reset').hidden=!current.offsets;
- $('shift-status').textContent=current.offsets?'Today’s times have been adjusted. The regular schedule for other days is unchanged.':'Applies only today. The regular schedule for other days is unchanged.';
+ $('shift-status').textContent=current.offsets?'Dnešní časy už jsou upravené. Běžný plán pro další dny se nemění.':'Platí pouze dnes. Běžný plán pro další dny se nemění.';
  try{
   const updated=config;R.effectiveConfig(updated,progress,date);
   const result=R.shiftRemaining(updated,progress,Number($('shift-minutes').value),date);
   preview.classList.remove('error');
-  preview.innerHTML='<p>Chores to shift: '+result.changes.length+'</p><ul class="shift-preview-list">'+result.changes.map(ch=>'<li><strong>'+escape(ch.title)+'</strong><span><s>'+escape(formatTime(ch.beforeStart,updated.format))+'–'+escape(formatTime(ch.beforeEnd,updated.format))+'</s> → <b>'+escape(formatTime(ch.start,updated.format))+'–'+escape(formatTime(ch.end,updated.format))+'</b></span></li>').join('')+'</ul>';
+  preview.innerHTML='<p>Počet posunutých úkolů: '+result.changes.length+'</p><ul class="shift-preview-list">'+result.changes.map(ch=>'<li><strong>'+escape(ch.title)+'</strong><span><s>'+escape(formatTime(ch.beforeStart,updated.format))+'–'+escape(formatTime(ch.beforeEnd,updated.format))+'</s> → <b>'+escape(formatTime(ch.start,updated.format))+'–'+escape(formatTime(ch.end,updated.format))+'</b></span></li>').join('')+'</ul>';
   $('shift-apply').disabled=false;
  }catch(error){preview.classList.add('error');preview.textContent=error.message;$('shift-apply').disabled=true;}
 }
@@ -501,15 +501,15 @@ $('shift-apply').addEventListener('click',()=>{
  try{
   const updated=config,date=new Date(),offset=Number($('shift-minutes').value);R.effectiveConfig(updated,progress,date);
   const result=R.shiftRemaining(updated,progress,offset,date);
-  finishShift(result.progress,'Today’s times: '+(offset>0?'+':'')+offset+' min.');
+  finishShift(result.progress,'Dnešní časy: '+(offset>0?'+':'')+offset+' min.');
  }catch(error){refreshShiftPreview();}
 });
 $('shift-undo').addEventListener('click',()=>{
- try{finishShift(R.undoShift(config,progress,new Date()),'Last daily shift undone.');}
+ try{finishShift(R.undoShift(config,progress,new Date()),'Poslední dnešní posun vrácen.');}
  catch(error){const preview=$('shift-preview');preview.classList.add('error');preview.textContent=error.message;}
 });
 $('shift-reset').addEventListener('click',()=>{
- finishShift(R.resetShifts(config,progress,new Date()),'Original times restored for today.');
+ finishShift(R.resetShifts(config,progress,new Date()),'Původní dnešní časy obnoveny.');
 });
 for(const dialog of [settings,shiftDialog,iconDialog,profileDialog,choresDialog]){
  const close=(dialog===settings||dialog===choresDialog)?saveAndCloseSettings:dialog===iconDialog?closeIconPicker:dialog===profileDialog?closeProfile:closeShift;
@@ -527,7 +527,7 @@ $('add-chore').addEventListener('click',()=>{const rows=[...$('chore-editor').ch
 $('preview-celebration').addEventListener('click',()=>celebrate());
 $('export-settings').addEventListener('click',()=>{try{const value=R.exportState(R.editProfile(importDraft||state,readEditor())),url=URL.createObjectURL(new Blob([JSON.stringify(value,null,2)],{type:'application/json'})),a=document.createElement('a');a.href=url;a.download='daily-profiles.json';a.hidden=true;document.body.appendChild(a);a.click();setTimeout(()=>{a.remove();URL.revokeObjectURL(url);},1000);}catch(error){settingsError(error);}});
 $('import-settings').addEventListener('click',()=>$('import-file').click());
-$('import-file').addEventListener('change',async event=>{const file=event.target.files[0];if(!file)return;try{if(file.size>100000)throw Error('Choose a routine file smaller than 100 KB.');const imported=R.importState(JSON.parse(await readFile(file)));imported.activeProfileId=state.activeProfileId;importDraft=imported;populateEditor(R.profileConfig(imported));$('import-notice').textContent='Importing replaces all profiles and children and clears daily progress. Close Settings to save; Discard changes cancels the import.';$('import-notice').hidden=false;notify('All profiles and children loaded. Close Settings to replace the setup, or Discard changes to cancel.');}catch(error){settingsError(new Error(error instanceof SyntaxError?'Invalid JSON file.':error.message));}finally{event.target.value='';}});
+$('import-file').addEventListener('change',async event=>{const file=event.target.files[0];if(!file)return;try{if(file.size>100000)throw Error('Vyberte soubor s plánem menší než 100 KB.');const imported=R.importState(JSON.parse(await readFile(file)));imported.activeProfileId=state.activeProfileId;importDraft=imported;populateEditor(R.profileConfig(imported));$('import-notice').textContent='Načtení nahradí všechny profily a děti a vynuluje denní pokrok. Zavřením Nastavení změny uložíte; Zahodit změny je zruší.';$('import-notice').hidden=false;notify('Načteny všechny profily a děti. Zavřením se nahradí celé nastavení a vynuluje denní pokrok. Zahodit změny import zruší.');}catch(error){settingsError(new Error(error instanceof SyntaxError?'Neplatný soubor JSON.':error.message));}finally{event.target.value='';}});
 // BEGIN SCREEN AWAKE
 /* Silent video samples and fallback technique adapted from NoSleep.js 0.12.0.
  * https://github.com/richtr/NoSleep.js/tree/07fcee254724ab1b79076fbc22f3dd447649a2eb
@@ -608,12 +608,12 @@ function createScreenAwake(onState){
 let awakeWarningShown=false;
 const screenAwake=createScreenAwake(state=>{
  const button=$('fullscreen');button.dataset.awake=state;
- button.title=state==='active'?'Full screen · keeping the display awake':state==='failed'?'Full screen · the display may turn off':'Full screen';
- if(state==='failed'&&!awakeWarningShown){awakeWarningShown=true;notify('The display may turn off. Tap the page to retry keeping it awake.');}
+ button.title=state==='active'?'Celá obrazovka · udržování displeje zapnutého':state==='failed'?'Celá obrazovka · displej může zhasnout':'Celá obrazovka';
+ if(state==='failed'&&!awakeWarningShown){awakeWarningShown=true;notify('Displej se může vypnout. Klepnutím na stránku zkuste udržování zapnout znovu.');}
  if(state==='off')awakeWarningShown=false;
 });
 function syncFullscreenAwake(){
- $('fullscreen').setAttribute('aria-label',document.fullscreenElement?'Exit full screen':'Enter full screen');
+ $('fullscreen').setAttribute('aria-label',document.fullscreenElement?'Ukončit celou obrazovku':'Zapnout celou obrazovku');
  if(document.fullscreenElement)screenAwake.enable();else screenAwake.disable();
 }
 $('fullscreen').addEventListener('click',async()=>{
@@ -623,15 +623,15 @@ $('fullscreen').addEventListener('click',async()=>{
    // Start media in the tap handler, before fullscreen consumes user activation.
    screenAwake.enable();
    try{await document.documentElement.requestFullscreen();}catch(error){screenAwake.disable();throw error;}
-  }else notify('Full screen unavailable.');
- }catch(error){notify('Full screen unavailable.');}
+  }else notify('Celá obrazovka není dostupná.');
+ }catch(error){notify('Celá obrazovka není dostupná.');}
 });
 document.addEventListener('fullscreenchange',syncFullscreenAwake);
 document.addEventListener('click',()=>{if(document.fullscreenElement&&$('fullscreen').dataset.awake==='failed')screenAwake.enable();});
 window.addEventListener('pagehide',()=>{cancelPendingCelebration();screenAwake.disable();});
 window.addEventListener('pageshow',syncFullscreenAwake);
 
-window.addEventListener('storage',event=>{if(event.key===KEY||event.key===null){dismissCelebration();if(iconDialog.open)closeIconPicker();if(choresDialog.open)closeChores();if(settings.open)closeSettings();if(shiftDialog.open)closeShift();if(profileDialog.open)closeProfile();load();tick(true);notify('Data changed in another tab. Unsaved editors have been closed.');}});
+window.addEventListener('storage',event=>{if(event.key===KEY||event.key===null){dismissCelebration();if(iconDialog.open)closeIconPicker();if(choresDialog.open)closeChores();if(settings.open)closeSettings();if(shiftDialog.open)closeShift();if(profileDialog.open)closeProfile();load();tick(true);notify('Data se změnila v jiné kartě. Rozpracované úpravy byly zavřeny.');}});
 document.addEventListener('visibilitychange',()=>{if(document.hidden)cancelPendingCelebration();else tick(true);syncFullscreenAwake();});
 for(const placeholder of document.querySelectorAll('[data-ui-icon]'))placeholder.innerHTML=uiIcon(placeholder.dataset.uiIcon);
 load();tick(true);$('startup-warning').hidden=true;requestAnimationFrame(jumpNow);setInterval(tick,1000);

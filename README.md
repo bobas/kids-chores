@@ -1,150 +1,153 @@
-# Evening garden
+# Večerní plán
 
-A small, private evening-routine app for a shared family tablet. No accounts, analytics, external libraries, fonts, APIs, or internet connection are needed.
+Malá místní aplikace s pěti profily pro denní úkoly dětí na společném rodinném tabletu. Nepotřebuje účty, analytiku, externí knihovny, písma ani připojení k internetu. České rozhraní je ve větvi `czech-translation`; původní anglická verze zůstává na větvi `main`.
 
-The complete user experience specification describes family workflows and comparison scenarios for a rewrite. [App description](APP-USER-SPECIFICATION.md)
+Podrobná uživatelská specifikace v angličtině popisuje ovládání i srovnávací scénáře pro novou implementaci. [Popis aplikace](APP-USER-SPECIFICATION.md)
 
 ## GitHub Pages
 
-The workflow in [.github/workflows/deploy-pages.yml](.github/workflows/deploy-pages.yml) tests and builds both language versions and publishes them together on pushes to `main` or `czech-translation`. It can also run manually through **Actions → Deploy English and Czech → Run workflow**.
+Workflow v [.github/workflows/deploy-pages.yml](.github/workflows/deploy-pages.yml) sestaví a otestuje obě jazykové verze a publikuje je společně při změně větve `main` nebo `czech-translation`. Lze ho spustit také ručně přes **Actions → Deploy English and Czech → Run workflow**.
 
-| Version | Source branch | URL |
+| Verze | Zdrojová větev | Adresa |
 | --- | --- | --- |
-| English | `main` | https://bobas.github.io/kids-chores/ |
-| Czech | `czech-translation` | https://bobas.github.io/kids-chores/cs/ |
+| Anglická | `main` | https://bobas.github.io/kids-chores/ |
+| Česká | `czech-translation` | https://bobas.github.io/kids-chores/cs/ |
 
-1. Keep the same workflow in both branches. With the usual Git workflow, commit it to `main` and rebase `czech-translation` onto it, then push both branches.
-2. Open **Settings → Pages → Build and deployment** and select **GitHub Actions** as the **Source**.
-3. If **Settings → Environments → github-pages** restricts deployment branches, allow both `main` and `czech-translation`.
-4. Run the workflow manually or push another change to either branch.
+1. Commitněte stejný workflow do obou větví. Při obvyklém postupu ho přidejte na `main` a přebazujte na něj `czech-translation`. Potom odešlete obě větve na GitHub.
+2. V repozitáři otevřete **Settings → Pages → Build and deployment** a jako **Source** vyberte **GitHub Actions**.
+3. Pokud prostředí **Settings → Environments → github-pages** omezuje povolené větve pro nasazení, povolte `main` i `czech-translation`.
+4. Spusťte workflow ručně nebo odešlete další změnu do jedné z obou větví.
 
-Both URLs share saved children, chores, and daily progress within the same browser. The build gives each language version separate offline caches. The published files include the app, standalone HTML, and licenses.
+Obě adresy v daném prohlížeči sdílejí uložené děti, úkoly i denní pokrok. Offline mezipaměti jsou při sestavení oddělené pro každou jazykovou verzi. Výstup obsahuje soubory aplikace, samostatné HTML a licence.
 
-## Run on a tablet (recommended)
+## Spuštění na tabletu
 
-1. Extract this folder on a computer connected to your home Wi-Fi.
-2. Open a terminal in this folder and run:
+1. Rozbalte tuto složku na počítači připojeném k domácí Wi-Fi.
+2. Otevřete v této složce terminál a spusťte:
 
    ```sh
    python3 serve.py
    ```
 
-   On Windows, use `py serve.py` if `python3` is unavailable.
-3. Leave that computer and terminal running. On the tablet, open the printed tablet address, for example `http://192.168.1.20:8080`. If an address is not printed, use the computer's Wi-Fi IP address. Both devices must be on the same local network; internet access is unnecessary.
-4. Open **Settings**, edit your chores and times, then close Settings to save automatically.
-5. Bookmark this address. Use the same address and browser each evening so the tablet finds its saved settings. If your computer's IP address changes, a fixed DHCP reservation in your router can keep the address stable.
+   Ve Windows můžete místo toho použít `py serve.py`.
+3. Nechte počítač i terminál zapnuté. Na tabletu otevřete vypsanou adresu, například `http://192.168.1.20:8080`. Pokud se adresa nevypíše, použijte místní IP adresu počítače. Obě zařízení musejí být ve stejné síti, připojení k internetu není potřeba.
+4. V hamburger menu otevřete **Nastavení**, přidejte děti a vyberte jejich barvy. Potom otevřete **Úkoly** a nastavte úkoly, časy a přiřazení vybrané části dne. Platné změny se uloží při zavření nastavení.
+5. Uložte si adresu do záložek a používejte vždy stejnou adresu i prohlížeč. Pevná rezervace DHCP v routeru může zabránit změně IP adresy počítače.
 
-The server only delivers the app files; settings and progress live in the tablet browser. Editing the app on the computer does not change the tablet's saved routine. The tablet never sends its settings or completion state to the server.
+Server pouze poskytuje soubory aplikace. Nastavení a splněné úkoly zůstávají v prohlížeči tabletu a na server se neposílají. Nastavení na počítači se do tabletu nepřenáší.
 
-If you prefer, run Python directly on the tablet and open `http://localhost:8080`. To limit the server to its own device, use `python3 serve.py --host 127.0.0.1`.
+Python můžete spustit také přímo na tabletu a otevřít `http://localhost:8080`. Přístup pouze z daného zařízení povolíte příkazem `python3 serve.py --host 127.0.0.1`.
 
-## Older Android 4.4 tablets
+## Starší tablet s Androidem 4.4
 
-Use **Firefox 68.11** on this tablet. The app targets Firefox 68 and newer. Android's version alone does not identify the browser engine; the original Android 4.4 system browser is not supported.
+Pro tento tablet používejte **Firefox 68.11**. Aplikace cílí na Firefox 68 a novější; samotná verze Androidu nestačí, protože vestavěný prohlížeč může mít mnohem starší vykreslovací jádro. Původní systémový prohlížeč Androidu 4.4 není podporovaný.
 
-Open the same local server address and port as usual. Reload the page after updating the files; `serve.py` does not need to restart. If only the header appears, close the tab and reopen the same address. Keep site data unless you have backed up the routine.
+Na tabletu otevřete stejnou adresu a port místního serveru jako obvykle. Po aktualizaci souborů stránku znovu načtěte; `serve.py` není potřeba restartovat. Pokud se stále ukazuje pouze záhlaví bez plánu, zavřete kartu a otevřete stejnou adresu znovu. Nemažte data webu, pokud nemáte zálohu plánu.
 
-The agenda, clocks, individual completion, settings, and backup import/export work without newer browser APIs. Browsers without native dialogs use a settings overlay. Task, celebration, and particle icons are embedded SVG graphics, so they need neither emoji fonts nor an internet connection. The icon picker shows previews and descriptive names. Existing routines and backups remain compatible. A startup notice stays visible if JavaScript is disabled or the browser cannot start the app.
+Podpora zahrnuje plán, hodiny, samostatné plnění dětí, nastavení a import/export záloh. Prohlížeč bez nativního dialogu dostane náhradní okno nastavení. Ikony úkolů, oslav i částic jsou vložené SVG obrázky. Vypadají stejně i bez emoji písem a bez připojení k internetu. Výběr ikony v nastavení ukazuje obrázek a nabízí české názvy; zálohy používají nový formát s pěti profily. U nepodporovaného prohlížeče nebo vypnutého JavaScriptu zůstane nad záhlavím upozornění místo nevysvětlené prázdné stránky.
 
-## Single-file version
+## Samostatný soubor
 
-`Evening garden.html` contains the whole app. Open it in a browser that supports local HTML files with JavaScript, and it can run completely offline with no server. Desktop browsers usually support this; tablet file viewers vary. Use the local server method if your tablet previews the file rather than opening it as a web app, or does not preserve file-based browser storage.
+Soubor `Evening garden.html` obsahuje celou aplikaci včetně češtiny. Otevřete ho v prohlížeči, který podporuje místní HTML soubory s JavaScriptem. Aplikace pak funguje bez serveru i bez sítě. Prohlížeče na počítači to běžně umožňují; prohlížeče a prohlížeče souborů na tabletech se liší. Pokud se soubor otevře pouze jako náhled nebo se neuchová nastavení, použijte místní server.
 
-Opening `index.html` directly also works when the other app files stay beside it.
+Přímo lze otevřít i `index.html`, pokud vedle něj zůstanou ostatní soubory aplikace.
 
-The optional service worker provides offline reloads on supported secure origins such as `localhost`. Ordinary tablet access over a Wi-Fi `http://192.168...` address requires the local server to remain reachable for page loads. The open app keeps working if the connection drops; all timing and interactions happen on the tablet.
+Volitelný service worker umožňuje načtení bez sítě na podporovaných zabezpečených adresách, například `localhost`. Při běžném přístupu z tabletu přes `http://192.168...` musí být server dostupný při načítání stránky. Již otevřená aplikace funguje i po výpadku spojení, protože čas i ovládání zpracovává tablet.
 
-## How it works
+## Ovládání
 
-- Closing Chores or Settings with ×, Escape, or a click outside saves valid edits automatically. **Discard changes** abandons that editor’s draft. Invalid values keep the relevant dialog open with an explanation.
-- Settings manages 1–8 shared children, their colors, the clock format, and celebrations. Chores manages 0–40 chores and their child assignments for the selected profile. A new child starts with no assignments. Choose their chores in the Chores editor.
-- Each chore appears once in a shared left column with a large picture and title. Its clock and times appear when relevant, as described below. Child names head the checkbox columns on the right. Checking and unchecking update that child’s progress, and the checkbox then waits two seconds before accepting another change. Unassigned children show a dash.
-- The shared vertical axis uses an adaptive, compressed scale. Longer chores receive more height without spanning many screens, while short rows fit their pictures, titles, checkboxes, and any visible clock. Overlapping chores for different children are stacked in one shared time block, with aligned child columns and time labels. A chore turns light green when every assigned child has checked it off. Gaps stay visible, and gaps of 30 minutes or more display their duration beside a fold mark. Rows and time labels move together as visible content changes.
-- The NOW line updates every second and follows the same compressed mapping as cards and time labels, including through gaps. Child headings remain visible while scrolling. The **Now** button jumps to the current time (or the first/last chore outside the displayed range). Extra columns scroll sideways.
-- A chore’s numbered range clock, exact start/end times, and duration appear while it is running, when it is the next unfinished future chore, or when it is overdue and still unfinished for any assigned child. The allocated interval is pale green for running or next-up chores and pale red for overdue unfinished chores. The starting hour hand, starting minute hand, and brown ending hand explain the interval. Ranges crossing the top of the face wrap correctly, and intervals of an hour or more fill the face with their duration written underneath.
-- The header keeps a normal digital and analog clock for device-local time. It shows the next chore's time and countdown when nothing is currently due.
-- Different children may have chores at the same time. Overlapping chores for the same child, unassigned chores, and time slots crossing midnight are rejected.
-- There are no decorative headings, subtitles, instructions on chore cards, or footers on the children's screen. The visible text focuses on time, child names, chore names, and completion counts.
-- Checking a chore by its deadline plays one of 20 daily celebration themes, including for early completion. A late ordinary completion shows a gentle turtle reminder. Finishing a child’s whole profile is judged against that profile’s latest adjusted end time and earns a trophy when on time. The family’s completion is acknowledged when everyone is done. Overlays remain visible for reading and accept tap or Escape dismissal after two seconds. The overlay consumes dismissing taps. Settings can disable or preview celebrations, and reduced-motion preferences are respected.
-- Progress resets at local midnight for every child. Schedules and names persist. Children without assignments show a dash and 0/0 progress.
-- **Back up all profiles** downloads the shared family settings and all regular profile schedules. **Import all profiles** stages a replacement in Settings, applied when that editor closes with valid data. Backups exclude daily checkmarks, rewards, and shifts. Discard changes abandons a staged import.
-- Older single-schedule backups need conversion outside the app before importing. Unsupported stored data is preserved and a message explains how to load a converted backup.
-- Browser storage is specific to its origin (address and port). Clearing site data removes your routine. The page warns if saving fails. There is no network synchronization.
+- **Úkoly** i **Nastavení** uloží platné změny při zavření křížkem, klávesou Escape nebo klepnutím mimo dialog. **Zahodit změny** opustí rozpracované úpravy daného editoru. Při chybě zůstane příslušné okno otevřené s vysvětlením.
+- V Nastavení se upravuje 1–8 společných dětí, jejich barvy, formát hodin a oslavy. V okně Úkoly se upravuje 0–40 úkolů vybraného profilu včetně přiřazení dětem. Nové dítě začíná bez přiřazení. Jeho úkoly vyberte v editoru Úkoly.
+- Každý úkol se zobrazí jednou vlevo s velkým obrázkem a názvem. Hodiny a časy se ukazují podle situace popsané níže. Vpravo jsou sloupce s políčky dětí. Zaškrtnutí i odškrtnutí změní pokrok daného dítěte a políčko pak dvě sekundy nepřijímá další změnu. Nepřiřazené děti mají místo políčka pomlčku.
+- Časová osa přizpůsobuje výšku délce a obsahu úkolů. Delší úkoly dostanou více místa, krátké řádky pojmou obrázek, název, políčka a případné hodiny. Souběžné úkoly různých dětí se řadí pod sebe ve společném časovém úseku se zarovnanými sloupci a časovými značkami. Řádky se při změnách obsahu plynule zvětšují a zmenšují spolu se značkami osy.
+- Mezery mezi úkoly zůstávají viditelné; od 30 minut se zobrazí jejich skutečná délka a značka zkrácení. Souběžné úkoly různých dětí se řadí pod sebe ve společném časovém úseku, kterým postupuje čára **TEĎ**. Světle zelené zvýraznění se zobrazí až po splnění úkolu všemi přiřazenými dětmi. Samotný začátek naplánovaného času zvýraznění nezapne.
+- Čára **TEĎ** se aktualizuje každou sekundu a sleduje stejnou zkrácenou osu jako úkoly a mezery. Tlačítko **Teď** přesune pohled na aktuální čas, případně na první nebo poslední úkol mimo zobrazené období. Jména dětí zůstávají při posouvání nahoře; další sloupce lze posouvat do stran.
+- Číselník, přesné časy a délka úkolu se zobrazují při jeho průběhu, u nejbližšího budoucího nedokončeného úkolu a u minulého úkolu, který ještě nesplnily všechny přiřazené děti. Vyhrazený čas je světle zelený u probíhajícího nebo příštího úkolu a světle červený u opožděného nedokončeného úkolu. Počáteční hodinová a minutová ručička a hnědá koncová ručička vysvětlují interval. Přechod přes dvanáctku se zobrazuje správně. U hodiny nebo delšího intervalu se vyplní celý číselník a délka se upřesní pod ním.
+- V horní části je aktuální místní čas digitálně i na běžných analogových hodinách. Lze vybrat 24hodinový nebo 12hodinový formát s označením „dop.“ a „odp.“. Pokud právě žádný úkol neprobíhá, zobrazí se začátek dalšího úkolu a zbývající čas.
+- Úkoly stejného dítěte se nesmějí časově překrývat ani přecházet přes půlnoc. Každý úkol musí být přiřazen alespoň jednomu dítěti. Různé děti mohou mít různé úkoly ve stejnou dobu.
+- Splnění nejpozději v určený čas doprovází jeden z 20 denních motivů oslavy, včetně předčasného splnění. Pozdní běžné splnění doprovází jemná želví připomínka. Dokončení všech úkolů dítěte se posuzuje podle nejpozdějšího dnešního konce celého profilu a při včasném dokončení přinese pohár. Splnění všech přiřazených úkolů celé rodiny dostane společné uznání.
+- Oslavy i želví zprávy zůstávají zobrazené po dobu čtení. Klepnutí nebo Escape je zavře až dvě sekundy po otevření. Zavírací klepnutí zpracuje překryv oslavy. Odškrtnutí oslavu nespouští. Oslavy lze v Nastavení vypnout nebo vyzkoušet. Respektují systémovou volbu omezeného pohybu.
+- Splněné úkoly se každému dítěti o místní půlnoci vynulují. Jména, barvy a plán zůstávají uložené. Dítě bez přiřazených úkolů má přehled 0/0.
+- **Zálohovat všechny profily** stáhne společné nastavení rodiny a běžné plány všech profilů. **Načíst všechny profily** připraví náhradu v Nastavení, která se použije při jeho zavření s platnými údaji. Záloha vynechává denní zaškrtnutí, oslavy a posuny. Zahodit změny zruší i připravený import.
+- Starší zálohy s jediným plánem je před importem potřeba převést mimo aplikaci. Nepodporovaná uložená data zůstanou zachovaná a zpráva vysvětlí, jak načíst převedenou zálohu.
+- Úložiště prohlížeče je vázané na adresu a port. Vymazáním dat webu se smaže i plán. Při nemožnosti ukládat se objeví upozornění. Aplikace nemá síťovou synchronizaci.
 
-## Files and checks
+## Soubory a ověření
 
-- `index.html`, `style.css`, `app.js`: interface and browser interactions.
-- `routine.js`: schedule validation, time windows, and daily-state rules.
-- `serve.py`: Python standard-library static server, restricted to app assets.
-- `sw.js`, `manifest.webmanifest`, `icon.svg`: optional offline cache / home-screen metadata.
-- `Evening garden.html`: standalone, bundled version.
-- `build.py`: regenerate the standalone HTML after editing the app.
-- `test.cjs`: automated tests of timing boundaries, validation, reload cleanup, and midnight reset. Run `node test.cjs` with Node 18 or newer. Node is only needed for these tests, not to run the app.
+- `index.html`, `style.css`, `app.js`: rozhraní a ovládání aplikace.
+- `routine.js`: pravidla plánu, ověření časů a správa denního pokroku.
+- `serve.py`: místní server ze standardní knihovny Pythonu, zpřístupňující pouze soubory aplikace.
+- `sw.js`, `manifest.webmanifest`, `icon.svg`: volitelná mezipaměť pro práci bez sítě a údaje pro domovskou obrazovku.
+- `Evening garden.html`: samostatná sestavená verze; původní technický název souboru zůstává kvůli stávajícím odkazům.
+- `build.py`: po změně zdrojů znovu vytvoří samostatný soubor. Spusťte `python3 build.py`.
+- `test.cjs`: automatické testy pravidel a české verze. Spusťte `node test.cjs` s Node.js 18 nebo novějším. Pro běžné používání aplikace Node.js není potřeba.
 
-The revised app has 47 automated tests for child-specific progress, assignment cleanup, timing, compressed-scale continuity, readable slot heights, cross-child alignment, range-sector geometry, validation, and migration. Browser checks verified custom color selection, color persistence and discard, late turtle reminders, regular celebrations, quiet undo, one shared row/title/range clock per chore, individual checkbox persistence and undo, assignment dashes, compact supper rows, preserved settings, and tablet column alignment. Earlier checks covered child addition/removal, selective assignment, independent completion, and reload persistence.
+Testy ověřují samostatné plnění, přiřazení, půlnoc, časové hranice, barvy, odmítnutí nepodporovaných záloh, zkrácenou osu, geometrii číselníku, češtinu a zachování vlastních názvů. Zahrnují také čekání po klepnutí a změnu želvího připomenutí na oslavu po opravě termínu. Kontrola v prohlížeči ověřuje nastavení, chybové zprávy, oslavy a čitelnost na tabletu.
 
-## Icons and licensing
+## Ikony a licence
 
-[Twemoji 15.1.0](https://github.com/jdecked/twemoji/tree/7407fa31c51be5ab45626b8ab5554d50cc8073f6) graphics by Twitter, Inc. and other contributors are licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). See `LICENSE-TWEMOJI.txt` for the full license. The 105 selected SVG graphics are embedded in `ICON_ART` in `app.js`, so the standalone HTML works offline and the existing server needs no restart. Artwork is unchanged; rendering adds styling and accessibility attributes to the SVG root. The app draws geometric particles and controls as vectors. No Twemoji JavaScript or network image requests are used.
+Grafika [Twemoji 15.1.0](https://github.com/jdecked/twemoji/tree/7407fa31c51be5ab45626b8ab5554d50cc8073f6) od Twitter, Inc. a dalších přispěvatelů je pod licencí [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Plné znění je v `LICENSE-TWEMOJI.txt`. Vybraných 105 SVG obrázků je přímo v `ICON_ART` v souboru `app.js`, takže fungují i v samostatném HTML a stávající server není potřeba restartovat. Kresby nejsou upravené; při vykreslení dostanou atributy pro stylování a přístupnost. Geometrické částice a ovládací symboly kreslí aplikace jako vektory. Není použitý Twemoji JavaScript ani síťové načítání obrázků.
 
-## Keep the screen awake in fullscreen
+## Zapnutý displej na celé obrazovce
 
-The fullscreen button also enables keep-awake. Leaving fullscreen or hiding the page releases it; returning to a still-fullscreen page tries to reacquire it. A green button border indicates active keep-awake. If the browser refuses or interrupts it, a message appears and the next tap on the page retries.
+Tlačítko celé obrazovky také zapne udržování displeje. Po opuštění celé obrazovky nebo skrytí stránky se udržování zastaví; po návratu do stále aktivní celé obrazovky se zkusí obnovit. Zelený okraj tlačítka označuje aktivní udržování. Pokud ho prohlížeč odmítne nebo přeruší, objeví se zpráva a klepnutí na stránku ho zkusí zapnout znovu.
 
-Supporting browsers use the Screen Wake Lock API. Firefox 68 and local HTTP access use bundled silent video adapted from [NoSleep.js 0.12.0](https://github.com/richtr/NoSleep.js/tree/07fcee254724ab1b79076fbc22f3dd447649a2eb). The video needs no network requests and is included in the standalone HTML. The samples and fallback technique are MIT licensed (Rich Tibbett); the license is in `LICENSE-NOSLEEP.txt` and the embedded app source.
+Podporované prohlížeče používají Screen Wake Lock API. Firefox 68 a přístup přes místní HTTP používají přibalené tiché video podle [NoSleep.js 0.12.0](https://github.com/richtr/NoSleep.js/tree/07fcee254724ab1b79076fbc22f3dd447649a2eb). Video se nikam nestahuje a funguje i v samostatném HTML. Ukázky a postup jsou pod licencí MIT (Rich Tibbett); znění je v `LICENSE-NOSLEEP.txt` i vloženém zdroji aplikace.
 
-Actual screen-sleep prevention also depends on the browser, operating system, and power-saving settings. On the tablet, check that fullscreen keeps the display on beyond its normal timeout and that exiting allows it to sleep normally again. Manually locking the device still locks the screen.
+Skutečné zabránění zhasnutí závisí také na prohlížeči, systému a úsporném režimu. Na tabletu ověřte, že v celé obrazovce displej zůstane zapnutý déle než obvyklý interval, a po jejím ukončení se zase vypíná normálně. Při ručním zamknutí zařízení zůstane obrazovka zamčená.
 
-## Shift today’s times
+## Posunutí dnešních časů
 
-Open **Menu → Shift times** for today’s adjustment. Choose +5, +10, +15, or +30 minutes, or enter a custom positive or negative offset. The preview shows old and new times. **Apply shift and close** saves today’s adjustment. Cancel, the close button, Escape, or tapping outside abandons the preview. **Undo last shift** restores the previous timing offsets. **Restore original times** clears all of today’s shifts and their undo history. Both recovery actions preserve checkmarks and saved celebrations.
+Otevřete **Menu → Posunout časy** pro dnešní úpravu. Vyberte +5, +10, +15 nebo +30 minut, případně zadejte vlastní kladný nebo záporný počet minut. Náhled ukáže staré a nové časy. **Použít posun a zavřít** úpravu uloží. Křížek, Escape, klepnutí mimo okno nebo **Zrušit** náhled zahodí. **Vrátit poslední posun** obnoví předchozí časové posuny. **Obnovit původní časy** zruší všechny dnešní posuny i jejich vrácení. Obě akce zachovají zaškrtnutí i uložené oslavy.
 
-The same offset applies to every future chore and every chore that any assigned child has not finished, including overdue and currently active chores. Completed past chores stay in place. Future chores move even if completed early. Both start and end move, preserving durations and gaps between shifted chores. Completed history can overlap shifted rows.
+Stejný posun dostanou všechny budoucí úkoly a všechny úkoly, které ještě nesplnily všechny přiřazené děti, včetně opožděných a právě probíhajících. Splněné minulé úkoly zůstávají na místě. Budoucí úkol se posune i při předčasném splnění. Posouvá se začátek i konec, takže délky a rozestupy mezi posouvanými úkoly zůstanou stejné. Historie splněných úkolů se může s posunutými řádky časově překrývat.
 
-The timeline, range clocks, countdown, Now button, and celebrations use today’s adjusted times. The shift and Undo survive a reload, but expire at local midnight along with daily progress. The regular schedule and its JSON backup exclude today’s adjustments. A shift crossing a day boundary is rejected with an explanation.
+Časová osa, číselníky, odpočet, tlačítko Teď i oslavy používají dnešní upravené časy. Posun a možnost vrácení přežijí obnovení stránky, ale o místní půlnoci se spolu s denním pokrokem vynulují. Běžný plán a jeho JSON záloha zůstávají bez dnešních úprav. Posun přes hranici dne se nepoužije a zobrazí vysvětlení.
 
-## The same celebration all day
+## Stejná oslava po celý den
 
-Each child’s chore checkbox in each profile receives a random daily celebration choice. Replaying the same acknowledgment reuses its picture, message variant, and animation arrangement, including after reload. At midnight the choices are cleared and the next day draws fresh choices on first completion.
+Každé políčko dítěte a úkolu v daném profilu dostane vlastní náhodný denní výběr oslavy. Při opakování stejného typu uznání se přehraje stejný obrázek, varianta zprávy a uspořádání animace, i po obnovení stránky. O půlnoci se výběry smažou a další den přinese nové náhodné volby při prvním splnění.
 
-Earned positive celebrations and trophies can be replayed later that day. A saved turtle is reconsidered when the chore is checked again. If that check meets today’s adjusted deadline, it earns an ordinary celebration or a trophy according to whether the child has finished the profile. To correct a late finish, dismiss the turtle after its two-second wait, uncheck once the checkbox is available, extend the remaining times, and let the child check again. The daily theme is reused and the upgraded outcome survives reload. A completion that is still late replays its saved turtle message. Shifting times preserves saved choices until the next check, and Settings previews have their own random choices.
+Získané kladné oslavy a poháry lze později téhož dne znovu přehrát. Uložená želvička se přehodnotí při dalším zaškrtnutí. Pokud dítě splní dnešní upravený termín, dostane běžnou oslavu nebo pohár podle toho, zda tím dokončilo celý profil. Rodič může po dvousekundovém čekání zavřít želvičku, odškrtnout dostupné políčko, posunout zbývající časy a nechat dítě znovu zaškrtnout. Použije se stejný denní motiv a získané uznání přežije obnovení stránky. Pokud je úkol stále pozdě, přehraje se původní želví zpráva. Samotný posun zachová výběr do dalšího zaškrtnutí. Náhledy v Nastavení mají vlastní náhodné volby.
 
-## Choosing chore icons
+## Výběr ikon úkolů
 
-Open Chores from the menu, then tap a chore’s picture to choose from 82 bundled icons. Browse Food, Hygiene, Health, Clothes, Tidying, School, Pets, Fun, and Rest, or use All. The current picture is highlighted. Choosing an icon returns to the Chores draft, where closing saves valid changes and Discard changes abandons them. Canceling the picker keeps the previous picture. All artwork works offline in Firefox 68 and the standalone app.
+V menu otevřete Úkoly a klepněte na obrázek úkolu. Výběr nabízí 82 vložených ikon v kategoriích Jídlo, Hygiena, Zdraví, Oblečení, Úklid, Škola, Zvířátka, Zábava a Odpočinek. Kategorie Vše ukáže celou nabídku a aktuální ikona je zvýrazněná. Výběr obrázku vrátí do rozpracovaného editoru Úkoly, kde zavření uloží platné změny a Zahodit změny je opustí. Zrušení výběru ponechá původní obrázek. Ikony fungují bez sítě ve Firefoxu 68 i v samostatném HTML.
 
-Health includes medicine, a plaster, a stethoscope, a thermometer, an injection, a hospital, health care, a heart, lungs for breathing, a mask, a crutch, and meditation.
+Kategorie **Zdraví** obsahuje léky, náplast, vyšetření, teploměr, injekci, nemocnici, zdravotní péči, srdce, dýchání, roušku, berle a meditaci.
 
-## Time-of-day profiles
+## Profily částí dne
 
-Open the hamburger menu to select Morning, Forenoon, Noon, Afternoon, or Evening. Profiles appear as tiles with an illustration above the name: sunrise, sun behind a cloud, sun, sunset, and moon. The selected tile is highlighted in green. The selected profile also appears in the Chore heading. Switching is manual and the last selection is remembered. On first use, Evening contains six example chores for two children, including Supper, Pajamas, Teeth, Prayer, Toilet, and Bed. The other profiles start empty with an Add chores action. Edit or remove the examples through Chores. Subsequent visits restore the saved family setup. New chores in empty profiles start at 07:00, 09:00, 12:00, 15:00, or 18:00, respectively; these are suggestions, not restrictions.
+Hamburger menu v horní liště přímo nabízí Ráno, Dopoledne, Poledne, Odpoledne a Večer. Profily jsou zobrazené jako dlaždice s obrázkem nad názvem: východ slunce, slunce za mráčkem, slunce, západ slunce a měsíc. Vybraná dlaždice má zelené zvýraznění. Vybraný profil je uvedený také v záhlaví Úkol. Přepínání je ruční a poslední výběr se pamatuje. Při prvním otevření obsahuje Večer šest ukázkových úkolů pro dvě děti, a to Večeři, Pyžámko, Vyčistit zoubky, Modlitbu, Na záchod a Do postýlky. Ostatní profily začínají prázdné a naplníte je tlačítkem Přidat úkoly. Ukázku upravíte nebo odstraníte v editoru Úkoly. Při dalších návštěvách se načte uložené nastavení rodiny. První nový úkol dostane čas 07:00, 09:00, 12:00, 15:00 nebo 18:00 podle profilu, ale časy nejsou nijak omezené na danou část dne.
 
-Children, colors, clock format, and the celebrations preference are shared. Each profile has its own chores, assignments, checkmarks, cached celebrations, daily shifts, undo, and reset. Final celebrations count only that profile. Daytime profiles use neutral celebration text; Evening keeps the bedtime wording. Daily progress expires at local midnight, including in inactive profiles.
+Děti, barvy, formát času a zapnutí oslav jsou společné. Úkoly, přiřazení, denní zaškrtnutí, uložené oslavy, posuny, vrácení a obnovení původních časů patří pouze vybranému profilu. Závěrečná oslava znamená splnění všech úkolů právě tohoto profilu. Přes den se používají neutrální texty oslav, večer zůstávají večerní. O půlnoci denní stav vyprší i v profilech, které nebyly otevřené.
 
-Settings edits shared children and preferences. The separate Chores dialog edits chores for the selected profile. Discard changes abandons all pending edits, including imports. Removing a child affects every profile; saving is blocked if any chore would lose its last assigned child.
+Nastavení ukládá společné děti a předvolby. Samostatné okno Úkoly ukládá úkoly vybraného profilu. Zahodit změny zruší všechny rozpracované úpravy včetně importu. Odebrání dítěte se promítne do všech profilů; pokud by některý úkol zůstal bez dítěte, uložení se zastaví s vysvětlením.
 
-### New backups
+### Nové zálohy
 
-Back up all profiles downloads `daily-profiles.json`: `version: 3`, shared `kids`, `format`, `celebrations`, `activeProfileId`, and a `profiles` object. Its fixed keys are `morning`, `forenoon`, `noon`, `afternoon`, and `evening`, each containing `chores`. Backups exclude daily progress and shifts. Import stages replacement of all profiles and children; close Settings to apply or Discard changes to cancel. Applying clears daily progress.
+Zálohovat všechny profily stáhne `daily-profiles.json`. Obsahuje `version: 3`, společné `kids`, `format`, `celebrations`, `activeProfileId` a objekt `profiles`. Ten má pevné položky `morning`, `forenoon`, `noon`, `afternoon`, `evening`, každou s polem `chores`. Záloha nezahrnuje denní pokrok ani posuny. Načtení připraví náhradu všech profilů a dětí; zavřením Nastavení ji potvrdíte, Zahodit změny ji zruší. Při použití zálohy se denní pokrok vynuluje.
 
-Older single-schedule backups and stored data are not migrated automatically. Unsupported stored data remains untouched; a message explains how to import a separately converted backup. Closing Settings without importing does not overwrite it. Testing-device backups can be converted outside the app.
+Staré jednorázové plány ani zálohy se automaticky nepřevádějí. Pokud prohlížeč obsahuje stará nebo neplatná data, aplikace je nepřepíše a zobrazí zprávu s pokynem načíst převedenou zálohu. Samotné zavření Nastavení je v tomto případě neuloží. Původní testovací záloha se převede mimo aplikaci, až bude k dispozici.
 
-## Toolbar and menu
+## Horní lišta a menu
 
-The toolbar has only Now, Fullscreen, and a hamburger menu. The menu directly lists the five profiles, followed by Shift times, Chores, and Settings. Chores contains titles, icons, times, and child assignments for the selected profile. Settings contains children and colors, clock format, celebrations and their preview, and all-profile backups. Both editors save valid changes when closed; Discard changes abandons their edits. Invalid values keep the relevant dialog open with an explanation.
+Horní lišta obsahuje pouze Teď, Celou obrazovku a hamburger menu. Menu přímo nabízí pět částí dne a dále Posunout časy, Úkoly a Nastavení. Úkoly obsahují pouze editor názvů, ikon, časů a přiřazení aktuálního profilu. Nastavení obsahuje děti s barvami, formát času, malé oslavy, jejich náhled a zálohy všech profilů. Oba editory ukládají platné změny při zavření; Zahodit změny je zruší. Neplatné údaje ponechají příslušné okno otevřené.
 
-## Trophy for completing a profile
+## Pohár za dokončení profilu
 
-When a child finishes all their assigned chores by the latest end time in the selected profile, they earn a trophy even if the last checkbox belongs to a chore whose own deadline has passed. Completion order does not matter. Today’s shifted times apply; finishing exactly at the final deadline still counts as on time. Individual chores before full completion retain their own deadlines. A previously cached ordinary celebration or turtle does not prevent earning the finale trophy. Earned trophies can be replayed like other daily celebrations.
+Pokud dítě dokončí všechny své úkoly nejpozději v nejpozdější koncový čas celého vybraného profilu, dostane pohár, i když poslední zaškrtnutý úkol měl vlastní termín dříve. Pořadí plnění nerozhoduje. Zohledňují se dnešní posunuté časy; přesně v koncový čas je ještě včas. U jednotlivých úkolů před dokončením všeho platí jejich vlastní termín. Dříve uložená běžná oslava nebo želvička nebrání získání závěrečného poháru. Získaný pohár se dá znovu přehrát, stejně jako ostatní denní oslavy.
 
-## Contextual chore clocks and compact rows
+## Kontextové hodiny úkolů
 
-Clock faces, exact start/end times, and duration are shown only for running chores, the nearest future unfinished chore, and past chores that any assigned child has not finished. All tied next-start chores show their details. Early-completed future chores are skipped when selecting the next chore; running chores retain their details until their end even if completed. Overdue unfinished chores use a pale-red clock sector. The time scale on the left remains available.
+Číselník, přesné časy od–do a délka úkolu se zobrazují jen u právě probíhajících úkolů, nejbližšího budoucího nedokončeného úkolu a minulých úkolů, které ještě nesplnily všechny přiřazené děti. Pokud má více nejbližších úkolů stejný začátek, zobrazí se u všech. Předčasně splněný budoucí úkol se pro výběr dalšího přeskočí. Probíhající úkol má údaje viditelné až do svého konce i při splnění. U minulého nedokončeného úkolu je výseč světle červená. Časová osa vlevo zůstává dostupná vždy.
 
-Timing details fade and slide in or out. Rows fit their actual visible content and duration, so short clockless chores are compact while wrapped titles, checkboxes, and visible clocks have enough room. Row height changes animate together with neighbouring rows, time labels, and the Now line. Chores have larger illustrations in a separate left column, with their titles beside them; content is vertically centered. Reduced-motion preferences disable these transitions.
+Údaje plynule přicházejí a mizí pomocí krátkého zeslabení a vodorovného posunu; jejich místo se pozvolna uvolní pro název úkolu. Výška řádků odpovídá skutečně zobrazenému obsahu a délce úkolu. Po skrytí hodin se zbytečné místo uvolní; delší texty, zaškrtávací políčka a viditelné hodiny mají vždy dost prostoru. Časová osa a čára Teď se přepočítají podle nových výšek. Při omezeném pohybu se animace vypne.
 
-## Responsive checkbox feedback
+Řádky při změně obsahu plynule rostou a zmenšují se. Spolu s nimi se posouvají následující úkoly, značky časové osy a čára Teď. Ikona úkolu má vlastní levý sloupec s větším obrázkem; název je vpravo od ní. Při omezeném pohybu se změny provedou okamžitě.
 
-Checking a chore updates its checkbox, the child’s progress and the affected row in place. Unchanged chores reuse their measured sizes. The checked state gets a rendered frame before the celebration opens. Switching profiles, opening a dialog or hiding the page cancels a celebration that has not opened yet.
+## Rychlé zaškrtnutí
 
-After checking or unchecking, that checkbox is locked for two seconds. A celebration accepts tap or Escape dismissal two seconds after it opens. Repeated attempts during the wait are ignored and do not extend it.
+Zaškrtnutí aktualizuje přímo políčko, souhrn dítěte a stav daného řádku. Rozměry nezměněných úkolů se znovu neměří. Nejdříve se vykreslí potvrzené zaškrtnutí, pak se otevře oslava. Změna profilu, otevření dialogu nebo skrytí stránky zruší dosud neotevřenou oslavu.
+
+Po zaškrtnutí nebo odškrtnutí se dané políčko na dvě sekundy uzamkne. Oslavu lze zavřít klepnutím nebo klávesou Escape až dvě sekundy po otevření. Opakované pokusy během čekání se ignorují a čekání neprodlužují.
