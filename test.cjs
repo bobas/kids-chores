@@ -21,3 +21,34 @@ test('turtle reminders apply only after the deadline, never to early or exactly-
 test('child colors persist through validation, backups and removal of other children',()=>{const c=R.defaults();c.kids[1].color='#12ABEF';const first=R.validate(JSON.parse(JSON.stringify(c)));assert.equal(first.kids[1].color,'#12abef');first.kids.shift();first.chores.forEach(ch=>ch.kidIds=['child-2']);assert.equal(R.validate(first).kids[0].color,'#12abef');});
 test('older routines receive default colors and invalid color values are rejected',()=>{const c=R.defaults();delete c.kids[0].color;assert.equal(R.validate(c).kids[0].color,R.KID_COLORS[0]);for(const color of ['red','#xyzxyz','#123','url(test)',null]){c.kids[0].color=color;assert.throws(()=>R.validate(c),/valid color/);}});
 test('checkbox marks stay readable with both light and dark chosen colors',()=>{assert.equal(R.kidTheme('#ffffff').ink,'#17251d');assert.equal(R.kidTheme('#000000').ink,'#ffffff');assert.equal(R.kidTheme('#000000').bg,'#dbdbdb');});
+
+
+test('saved routines and the timeline work without Object.hasOwn or Array.at',()=>{
+ const vm=require('node:vm'),fs=require('node:fs'),path=require('node:path');
+ const context=vm.createContext({});
+ vm.runInContext('Object.hasOwn=undefined;Array.prototype.at=undefined;',context);
+ vm.runInContext(fs.readFileSync(path.join(__dirname,'routine.js'),'utf8'),context);
+ const result=vm.runInContext(`(()=>{
+  const r=globalThis.Routine,c=r.validate(r.defaults()),d=new Date(2026,9,16,19),p=r.freshProgress(d);
+  p.done[r.completionKey(c.kids[0].id,c.chores[0].id)]={at:d.toISOString()};
+  const restored=r.cleanProgress(JSON.parse(JSON.stringify(p)),c,d),layout=r.timeline(c);
+  return {done:Object.keys(restored.done).length,rows:layout.rows.length,height:layout.height,end:r.position(layout,layout.end)};
+ })()`,context);
+ assert.equal(result.done,1);assert.equal(result.rows,6);assert.ok(result.height>0);assert.equal(result.end,result.height);
+});
+
+
+test('all chore and celebration icons have bundled graphics without fonts or external images',()=>{
+ const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),source=fs.readFileSync(path.join(__dirname,'app.js'),'utf8');
+ const helpers=source.slice(source.indexOf('const ICON_ART='),source.indexOf('// Keep browser-facing code compatible'));
+ const themes=source.slice(source.indexOf('const celebrationThemes='),source.indexOf('const lateReminders='));
+ const icons=vm.runInNewContext(helpers+themes+';({art:ICON_ART,labels:ICON_LABELS,markup:iconMarkup,themes:celebrationThemes})');
+ const symbols=new Set([...R.ICONS,...icons.themes.flatMap(theme=>[theme[0],theme[3]]),'🐢','🏆','🍃']);
+ for(const symbol of symbols){
+  const svg=icons.markup(symbol);assert.match(svg,/^<svg /,symbol);assert.match(svg,/aria-hidden="true"/,symbol);
+  assert.match(svg,/<(?:path|circle|polygon|ellipse|rect)\b/,symbol);
+  assert.doesNotMatch(svg,/<(?:text|image|script|foreignObject|use)\b|(?:href|onload|onerror)=/,symbol);
+ }
+ for(const icon of R.ICONS){assert.ok(icons.art[icon],icon);assert.ok(icons.labels[icon],icon);const config=R.defaults();config.chores[0].icon=icon;assert.equal(R.validate(JSON.parse(JSON.stringify(config))).chores[0].icon,icon);}
+ assert.equal(icons.markup('<img src=x onerror=alert(1)>'),icons.markup('⭐'));
+});

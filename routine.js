@@ -15,7 +15,7 @@ function dayKey(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(
 function timeOfDay(d){return d.getHours()*60+d.getMinutes()+d.getSeconds()/60;}
 function validId(id){return typeof id==='string'&&/^[a-zA-Z0-9_-]{1,100}$/.test(id);}
 function migrate(value){
- if(value?.version!==1)return value;
+ if(!value||value.version!==1)return value;
  const kids=[{id:'child-1',name:'Child 1',color:KID_COLORS[0]},{id:'child-2',name:'Child 2',color:KID_COLORS[1]}];
  return {...value,version:2,kids,chores:Array.isArray(value.chores)?value.chores.map(c=>({...c,kidIds:kids.map(k=>k.id)})):value.chores};
 }
@@ -45,8 +45,8 @@ function completionKey(kidId,choreId){return `${kidId}:${choreId}`;}
 function freshProgress(date){return {day:dayKey(date),done:Object.create(null)};}
 function cleanProgress(progress,config,date,legacy=false){
  const clean=freshProgress(date);
- if(progress?.day!==clean.day||!progress.done||typeof progress.done!=='object')return clean;
- for(const chore of config.chores)for(const kidId of chore.kidIds){const key=completionKey(kidId,chore.id),oldKey=legacy&&kidId===config.kids[0].id?chore.id:key,item=Object.hasOwn(progress.done,oldKey)?progress.done[oldKey]:null;if(item&&typeof item.at==='string'&&Number.isFinite(Date.parse(item.at))&&dayKey(new Date(item.at))===clean.day)clean.done[key]={at:item.at};}
+ if(!progress||progress.day!==clean.day||!progress.done||typeof progress.done!=='object')return clean;
+ for(const chore of config.chores)for(const kidId of chore.kidIds){const key=completionKey(kidId,chore.id),oldKey=legacy&&kidId===config.kids[0].id?chore.id:key,item=Object.prototype.hasOwnProperty.call(progress.done,oldKey)?progress.done[oldKey]:null;if(item&&typeof item.at==='string'&&Number.isFinite(Date.parse(item.at))&&dayKey(new Date(item.at))===clean.day)clean.done[key]={at:item.at};}
  return clean;
 }
 function onTime(chore,now){return now>=minutes(chore.start)&&now<minutes(chore.end);}
@@ -58,7 +58,7 @@ function timeline(config){
  const chores=[...config.chores].sort((a,b)=>minutes(a.start)-minutes(b.start));
  const start=Math.max(0,Math.floor((minutes(chores[0].start)-15)/5)*5),end=Math.min(1440,Math.ceil((Math.max(...chores.map(c=>minutes(c.end)))+5)/5)*5);
  const groups=[];
- for(const chore of chores){const a=minutes(chore.start),b=minutes(chore.end),last=groups.at(-1);if(last&&a<last.end){last.chores.push(chore);last.end=Math.max(last.end,b);}else groups.push({start:a,end:b,chores:[chore]});}
+ for(const chore of chores){const a=minutes(chore.start),b=minutes(chore.end),last=groups[groups.length-1];if(last&&a<last.end){last.chores.push(chore);last.end=Math.max(last.end,b);}else groups.push({start:a,end:b,chores:[chore]});}
  const rows=[],segments=[];let y=0,cursor=start;
  function addGap(a,b){if(b<=a)return;const height=Math.min(130,30+25*Math.log1p((b-a)/5));segments.push({start:a,end:b,top:y,height,active:false});y+=height;}
  for(const group of groups){addGap(cursor,group.start);const top=y;for(const chore of group.chores){const duration=minutes(chore.end)-minutes(chore.start),height=Math.max(190,85+Math.ceil(chore.title.length/10)*30,130+48*Math.log1p(duration/5));rows.push({id:chore.id,top:y,height});y+=height;}segments.push({start:group.start,end:group.end,top,height:y-top,active:true});cursor=group.end;}

@@ -20,6 +20,14 @@ The server only delivers the app files; settings and progress live in the tablet
 
 If you prefer, run Python directly on the tablet and open `http://localhost:8080`. To limit the server to its own device, use `python3 serve.py --host 127.0.0.1`.
 
+## Older Android 4.4 tablets
+
+Use **Firefox 68.11** on this tablet. The app targets Firefox 68 and newer. Android's version alone does not identify the browser engine; the original Android 4.4 system browser is not supported.
+
+Open the same local server address and port as usual. Reload the page after updating the files; `serve.py` does not need to restart. If only the header appears, close the tab and reopen the same address. Keep site data unless you have backed up the routine.
+
+The agenda, clocks, individual completion, settings, and backup import/export work without newer browser APIs. Browsers without native dialogs use a settings overlay. Task, celebration, and particle icons are embedded SVG graphics, so they need neither emoji fonts nor an internet connection. The icon picker shows previews and descriptive names. Existing routines and backups remain compatible. A startup notice stays visible if JavaScript is disabled or the browser cannot start the app.
+
 ## Single-file version
 
 `Evening garden.html` contains the whole app. Open it in a browser that supports local HTML files with JavaScript, and it can run completely offline with no server. Desktop browsers usually support this; tablet file viewers vary. Use the local server method if your tablet previews the file rather than opening it as a web app, or does not preserve file-based browser storage.
@@ -55,4 +63,8 @@ The optional service worker provides offline reloads on supported secure origins
 - `build.py`: regenerate the standalone HTML after editing the app.
 - `test.cjs`: automated tests of timing boundaries, validation, reload cleanup, and midnight reset. Run `node test.cjs` with Node 18 or newer. Node is only needed for these tests, not to run the app.
 
-The revised app has 20 automated tests for child-specific progress, assignment cleanup, timing, compressed-scale continuity, readable slot heights, cross-child alignment, range-sector geometry, validation, and migration. Browser checks verified custom color selection, color persistence and discard, late turtle reminders, regular celebrations, quiet undo, one shared row/title/range clock per chore, individual checkbox persistence and undo, assignment dashes, compact supper rows, preserved settings, and tablet column alignment. Earlier checks covered child addition/removal, selective assignment, independent completion, and reload persistence.
+The revised app has 22 automated tests for child-specific progress, assignment cleanup, timing, compressed-scale continuity, readable slot heights, cross-child alignment, range-sector geometry, validation, and migration. Browser checks verified custom color selection, color persistence and discard, late turtle reminders, regular celebrations, quiet undo, one shared row/title/range clock per chore, individual checkbox persistence and undo, assignment dashes, compact supper rows, preserved settings, and tablet column alignment. Earlier checks covered child addition/removal, selective assignment, independent completion, and reload persistence.
+
+## Icons and licensing
+
+[Twemoji 15.1.0](https://github.com/jdecked/twemoji/tree/7407fa31c51be5ab45626b8ab5554d50cc8073f6) graphics by Twitter, Inc. and other contributors are licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). See `LICENSE-TWEMOJI.txt` for the full license. The 38 selected SVG graphics are embedded in `ICON_ART` in `app.js`, so the standalone HTML works offline and the existing server needs no restart. Artwork is unchanged; rendering adds styling and accessibility attributes to the SVG root. The app draws geometric particles and controls as vectors. No Twemoji JavaScript or network image requests are used.
