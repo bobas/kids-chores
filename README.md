@@ -63,7 +63,7 @@ The optional service worker provides offline reloads on supported secure origins
 - `build.py`: regenerate the standalone HTML after editing the app.
 - `test.cjs`: automated tests of timing boundaries, validation, reload cleanup, and midnight reset. Run `node test.cjs` with Node 18 or newer. Node is only needed for these tests, not to run the app.
 
-The revised app has 29 automated tests for child-specific progress, assignment cleanup, timing, compressed-scale continuity, readable slot heights, cross-child alignment, range-sector geometry, validation, and migration. Browser checks verified custom color selection, color persistence and discard, late turtle reminders, regular celebrations, quiet undo, one shared row/title/range clock per chore, individual checkbox persistence and undo, assignment dashes, compact supper rows, preserved settings, and tablet column alignment. Earlier checks covered child addition/removal, selective assignment, independent completion, and reload persistence.
+The revised app has 38 automated tests for child-specific progress, assignment cleanup, timing, compressed-scale continuity, readable slot heights, cross-child alignment, range-sector geometry, validation, and migration. Browser checks verified custom color selection, color persistence and discard, late turtle reminders, regular celebrations, quiet undo, one shared row/title/range clock per chore, individual checkbox persistence and undo, assignment dashes, compact supper rows, preserved settings, and tablet column alignment. Earlier checks covered child addition/removal, selective assignment, independent completion, and reload persistence.
 
 ## Icons and licensing
 
@@ -76,3 +76,11 @@ The fullscreen button also enables keep-awake. Leaving fullscreen or hiding the 
 Supporting browsers use the Screen Wake Lock API. Firefox 68 and local HTTP access use bundled silent video adapted from [NoSleep.js 0.12.0](https://github.com/richtr/NoSleep.js/tree/07fcee254724ab1b79076fbc22f3dd447649a2eb). The video needs no network requests and is included in the standalone HTML. The samples and fallback technique are MIT licensed (Rich Tibbett); the license is in `LICENSE-NOSLEEP.txt` and the embedded app source.
 
 Actual screen-sleep prevention also depends on the browser, operating system, and power-saving settings. On the tablet, check that fullscreen keeps the display on beyond its normal timeout and that exiting allows it to sleep normally again. Manually locking the device still locks the screen.
+
+## Shift today’s times
+
+At the top of Settings, use **Shift today’s times**. Choose +5, +10, +15, or +30 minutes, or enter a custom positive or negative offset. The preview shows the old and new times. **Apply shift and close** saves the settings and today’s adjustment. **Undo last shift** restores the times before the last adjustment while preserving all checkmarks.
+
+The same offset applies to every future chore and every chore that any assigned child has not finished, including overdue and currently active chores. Completed past chores stay in place. Future chores move even if completed early. Both start and end move, preserving durations and gaps between shifted chores. Completed history can overlap shifted rows.
+
+The timeline, range clocks, countdown, Now button, and celebrations use today’s adjusted times. The shift and Undo survive a reload, but expire at local midnight along with daily progress. The regular schedule and its JSON backup exclude today’s adjustments. A shift crossing a day boundary is rejected with an explanation.

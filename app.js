@@ -2,6 +2,7 @@
 'use strict';
 const R=window.Routine,$=id=>document.getElementById(id),KEY='evening-garden-v1';
 let config=R.defaults(),progress=R.freshProgress(new Date()),renderStamp='',toastTimer,lastCelebration=-1,lastReminder=-1,layout;
+let todayConfig=config;
 // Twemoji 15.1.0 graphics: Copyright Twitter, Inc. and other contributors.
 // CC BY 4.0: https://creativecommons.org/licenses/by/4.0/
 // Source: https://github.com/jdecked/twemoji/tree/7407fa31c51be5ab45626b8ab5554d50cc8073f6/assets/svg
@@ -99,7 +100,7 @@ function kidStyle(kid,index=0){const t=R.kidTheme(kid.color||R.KID_COLORS[index%
 function notify(message){clearTimeout(toastTimer);$('toast').textContent=message;$('toast').hidden=false;toastTimer=setTimeout(()=>$('toast').hidden=true,2200);}
 function save(){try{localStorage.setItem(KEY,JSON.stringify({config,progress}));$('storage-warning').hidden=true;}catch{$('storage-warning').hidden=false;}}
 function load(){try{const raw=localStorage.getItem(KEY);if(raw){const data=JSON.parse(raw),legacy=data.config&&data.config.version===1;config=R.validate(data.config);progress=R.cleanProgress(data.progress,config,new Date(),legacy);if(legacy){save();notify('Rename children in Settings.');}}}catch(error){if(error.name==='SecurityError')$('storage-warning').hidden=false;else notify('Saved routine unreadable. Starter routine loaded.');}}
-function formatTime(time){const[h,m]=time.split(':').map(Number);return config.format==='24'?time:`${h%12||12}:${String(m).padStart(2,'0')} ${h<12?'AM':'PM'}`;}
+function formatTime(time,format=config.format){const[h,m]=time.split(':').map(Number);return format==='24'?time:`${h%12||12}:${String(m).padStart(2,'0')} ${h<12?'AM':'PM'}`;}
 function timeString(m){return `${String(Math.floor(m/60)).padStart(2,'0')}:${String(Math.floor(m%60)).padStart(2,'0')}`;}
 function digits(time){return escape(formatTime(time)).replace(/ (AM|PM)$/,'<small>$1</small>');}
 function clockSvg(hour,minute){
@@ -124,14 +125,14 @@ function timelineTicks(){
 function done(kidId,choreId){return !!progress.done[R.completionKey(kidId,choreId)];}
 function assigned(kidId){return config.chores.filter(c=>c.kidIds.includes(kidId));}
 function render(now){
- layout=R.timeline(config);const focused=document.activeElement&&document.activeElement.dataset&&document.activeElement.dataset.key;
+ layout=R.timeline(todayConfig);const focused=document.activeElement&&document.activeElement.dataset&&document.activeElement.dataset.key;
  $('schedule').style.setProperty('--kid-count',config.kids.length);$('timeline').style.height=`${layout.height}px`;
  $('column-heads').innerHTML='<div class="axis-head" aria-hidden="true">'+uiIcon('clock')+'</div><div class="chore-column-head">Chore</div>'+config.kids.map((kid,i)=>{const chores=assigned(kid.id),n=chores.filter(c=>done(kid.id,c.id)).length;return `<div class="kid-head" style="${kidStyle(kid,i)}"><div class="kid-name-wrap"><div class="kid-name">${escape(kid.name)}</div><div class="kid-progress" role="progressbar" aria-label="${escape(kid.name)}’s chores" aria-valuemin="0" aria-valuemax="${chores.length||1}" aria-valuenow="${n}" aria-valuetext="${n} of ${chores.length}"><i style="width:${chores.length?n/chores.length*100:0}%"></i></div><span class="kid-score">${n}/${chores.length}${chores.length&&n===chores.length?uiIcon('check'):''}</span></div></div>`;}).join('');
  const ticks=timelineTicks();$('time-axis').innerHTML=ticks.map(t=>`<div class="time-tick${t.boundary?' major':''}" style="top:${t.y}px">${digits(timeString(t.m))}</div>`).join('');
  const lines=ticks.map(t=>`<i class="grid-line" aria-hidden="true" style="top:${t.y}px"></i>`).join('');
  const gaps=layout.segments.filter(s=>!s.active&&s.end-s.start>=30).map(s=>`<span class="gap-fold" aria-hidden="true" style="top:${s.top+s.height/2}px">↕ ${Math.floor((s.end-s.start)/60)?`${Math.floor((s.end-s.start)/60)}h `:''}${(s.end-s.start)%60?`${(s.end-s.start)%60}m`:''}</span>`).join('');
  $('kid-columns').innerHTML=lines+gaps+layout.rows.map(row=>{
-  const chore=config.chores.find(c=>c.id===row.id),complete=chore.kidIds.every(k=>done(k,chore.id)),state=R.status(chore,now,complete);
+  const chore=todayConfig.chores.find(c=>c.id===row.id),complete=chore.kidIds.every(k=>done(k,chore.id)),state=R.status(chore,now,complete);
   return `<div class="routine-row ${state}" data-id="${escape(chore.id)}" style="top:${row.top+4}px;height:${row.height-8}px"><div class="shared-chore"><div class="shared-chore-content"><span class="chore-heading"><span class="chore-icon" aria-hidden="true">${iconMarkup(chore.icon)}</span><span class="chore-title">${escape(chore.title)}</span></span>${rangeClock(chore)}</div></div>${config.kids.map((kid,i)=>{const included=chore.kidIds.includes(kid.id),checked=included&&done(kid.id,chore.id);return `<div class="kid-cell${included?'':' unassigned'}${checked?' checked':''}" style="${kidStyle(kid,i)}">${included?`<label class="check-target"><input class="child-check" type="checkbox" data-kid="${escape(kid.id)}" data-id="${escape(chore.id)}" data-key="${escape(R.completionKey(kid.id,chore.id))}"${checked?' checked':''} aria-label="${escape(kid.name)}: ${escape(chore.title)}, ${escape(formatTime(chore.start))} to ${escape(formatTime(chore.end))}"></label>`:`<span class="not-assigned" aria-label="${escape(kid.name)}: not assigned">—</span>`}</div>`;}).join('')}</div>`;
  }).join('');
  if(focused){const previous=[...document.querySelectorAll('.child-check')].find(b=>b.dataset.key===focused);if(previous)previous.focus({preventScroll:true});}
@@ -139,14 +140,15 @@ function render(now){
 function updateNow(now){if(!layout)return;const marker=$('now-marker');marker.hidden=now<layout.start||now>layout.end;if(!marker.hidden){marker.style.top=`${R.position(layout,now)}px`;$('now-label').innerHTML=`NOW<br>${digits(timeString(now))}`;}}
 function tick(force=false){
  const date=new Date(),now=R.timeOfDay(date),day=R.dayKey(date);if(progress.day!==day){progress=R.freshProgress(date);save();force=true;}
+ todayConfig=R.effectiveConfig(config,progress,date);
  const time=timeString(now);$('digital-time').innerHTML=digits(time);const clock=$('main-clock');if(!clock.firstChild)clock.innerHTML=clockSvg(date.getHours(),date.getMinutes());clock.setAttribute('role','img');clock.setAttribute('aria-label',`Current time ${formatTime(time)}`);clock.querySelector('.hour-hand').setAttribute('transform',`rotate(${date.getHours()%12*30+date.getMinutes()*.5+date.getSeconds()/120} 100 100)`);clock.querySelector('.minute-hand').setAttribute('transform',`rotate(${date.getMinutes()*6+date.getSeconds()*.1} 100 100)`);
- const stamp=`${day}-${time}`;if(force||stamp!==renderStamp){render(now);renderStamp=stamp;}updateNow(now);
- const active=config.chores.some(c=>R.onTime(c,now)&&c.kidIds.some(k=>!done(k,c.id))),next=config.chores.find(c=>R.minutes(c.start)>now&&c.kidIds.some(k=>!done(k,c.id))),left=next?Math.ceil(R.minutes(next.start)-now):0;$('starts-in').textContent=!active&&next?`${formatTime(next.start)} · ${left>=60?`${Math.floor(left/60)}h `:''}${left%60}m`:'';
+ const stamp=`${day}-${time}`;if(force||stamp!==renderStamp){render(now);renderStamp=stamp;if(settings.open)refreshShiftPreview();}updateNow(now);
+ const active=todayConfig.chores.some(c=>R.onTime(c,now)&&c.kidIds.some(k=>!done(k,c.id))),next=todayConfig.chores.find(c=>R.minutes(c.start)>now&&c.kidIds.some(k=>!done(k,c.id))),left=next?Math.ceil(R.minutes(next.start)-now):0;$('starts-in').textContent=!active&&next?`${formatTime(next.start)} · ${left>=60?`${Math.floor(left/60)}h `:''}${left%60}m`:'';
 }
-function jumpNow(){if(!layout)return;const now=R.timeOfDay(new Date()),target=(now<layout.start?R.minutes(config.chores[0].start):(now>layout.end?R.minutes(config.chores[config.chores.length-1].start):now));$('schedule-scroll').scrollTo({top:Math.max(0,R.position(layout,target)-90),behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});}
+function jumpNow(){if(!layout)return;const now=R.timeOfDay(new Date()),target=(now<layout.start?R.minutes(todayConfig.chores[0].start):(now>layout.end?R.minutes(todayConfig.chores[todayConfig.chores.length-1].start):now));$('schedule-scroll').scrollTo({top:Math.max(0,R.position(layout,target)-90),behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});}
 $('jump-now').addEventListener('click',jumpNow);
 $('kid-columns').addEventListener('change',event=>{
- const button=event.target.closest('.child-check');if(!button)return;const kidId=button.dataset.kid,choreId=button.dataset.id,wasChecked=button.checked;tick();const kid=config.kids.find(k=>k.id===kidId),chore=config.chores.find(c=>c.id===choreId&&c.kidIds.includes(kidId));if(!kid||!chore)return;
+ const button=event.target.closest('.child-check');if(!button)return;const kidId=button.dataset.kid,choreId=button.dataset.id,wasChecked=button.checked;tick();const kid=config.kids.find(k=>k.id===kidId),chore=todayConfig.chores.find(c=>c.id===choreId&&c.kidIds.includes(kidId));if(!kid||!chore)return;
  const key=R.completionKey(kidId,choreId),undo=!wasChecked,date=new Date();if(undo)delete progress.done[key];else progress.done[key]={at:date.toISOString()};save();tick(true);
  if(undo){dismissCelebration();return;}
  const personalDone=assigned(kidId).every(c=>done(kidId,c.id)),everyone=config.chores.every(c=>c.kidIds.every(k=>done(k,c.id)));
@@ -190,18 +192,49 @@ function assignmentMarkup(ids){return '<legend>Children</legend>'+currentKids().
 function refreshAssignments(){for(const field of document.querySelectorAll('.assignments')){const checked=[...field.querySelectorAll('input:checked')].map(i=>i.value);field.innerHTML=assignmentMarkup(checked);}}
 function editorRow(chore){const row=document.createElement('div');row.className='editor-row';row.dataset.id=chore.id;row.innerHTML=`<div class="edit-main"><label>Icon<span class="icon-picker"><span class="icon-preview" aria-hidden="true">${iconMarkup(chore.icon)}${uiIcon('caret')}</span><select class="edit-icon" aria-label="Chore icon">${R.ICONS.map(icon=>`<option value="${escape(icon)}"${chore.icon===icon?' selected':''}>${ICON_LABELS[icon]}</option>`).join('')}</select></span></label><label>Chore<input class="edit-title" maxlength="60" required value="${escape(chore.title)}" placeholder="Story" aria-label="Chore name"></label><label>From<input class="edit-start" type="time" required value="${escape(chore.start)}" aria-label="Start time"></label><label>To<input class="edit-end" type="time" required value="${escape(chore.end)}" aria-label="End time"></label><button type="button" class="delete-chore" aria-label="Remove chore">${uiIcon('close')}</button></div><fieldset class="assignments">${assignmentMarkup(chore.kidIds)}</fieldset>`;row.querySelector('.edit-icon').addEventListener('change',event=>{row.querySelector('.icon-preview').innerHTML=iconMarkup(event.target.value)+uiIcon('caret');});row.querySelector('.delete-chore').addEventListener('click',()=>{row.remove();updateAddButton();});return row;}
 function updateAddButton(){$('add-chore').disabled=$('chore-editor').children.length>=40;}
-function populateEditor(value){$('clock-format').value=value.format;$('celebrations-enabled').checked=value.celebrations;replaceChildren($('kids-editor'),value.kids.map(kidRow));$('add-kid').disabled=value.kids.length>=8;replaceChildren($('chore-editor'),value.chores.map(editorRow));$('settings-error').hidden=true;updateAddButton();}
+function populateEditor(value){$('clock-format').value=value.format;$('celebrations-enabled').checked=value.celebrations;replaceChildren($('kids-editor'),value.kids.map(kidRow));$('add-kid').disabled=value.kids.length>=8;replaceChildren($('chore-editor'),value.chores.map(editorRow));$('settings-error').hidden=true;updateAddButton();$('shift-minutes').value='15';refreshShiftPreview();}
 function readEditor(){return R.validate({version:2,format:$('clock-format').value,celebrations:$('celebrations-enabled').checked,kids:currentKids(),chores:[...$('chore-editor').children].map(row=>({id:row.dataset.id,title:row.querySelector('.edit-title').value,icon:row.querySelector('.edit-icon').value,start:row.querySelector('.edit-start').value,end:row.querySelector('.edit-end').value,kidIds:[...row.querySelectorAll('.assignments input:checked')].map(i=>i.value)}))});}
 function settingsError(error){$('settings-error').textContent=error.message;$('settings-error').hidden=false;$('settings-error').scrollIntoView({block:'nearest',behavior:'smooth'});}
 $('settings-open').addEventListener('click',openSettings);
+function finishSettings(updated,nextProgress,message='Saved'){
+ const changed=JSON.stringify(updated)!==JSON.stringify(config)||JSON.stringify(nextProgress)!==JSON.stringify(progress);
+ if(changed){config=updated;progress=nextProgress;save();tick(true);}
+ dismissCelebration();closeSettings();
+ if(changed){notify(message);jumpNow();}
+}
 function saveAndCloseSettings(){
  try{
-  const updated=readEditor(),changed=JSON.stringify(updated)!==JSON.stringify(config);
-  if(changed){progress=R.cleanProgress(progress,updated,new Date());config=updated;save();tick(true);}
-  dismissCelebration();closeSettings();
-  if(changed){notify('Saved');jumpNow();}
+  const updated=readEditor(),date=new Date();R.effectiveConfig(updated,progress,date);
+  finishSettings(updated,R.cleanProgress(progress,updated,date));
  }catch(error){settingsError(error);}
 }
+function refreshShiftPreview(){
+ const date=new Date(),undo=$('shift-undo'),preview=$('shift-preview');
+ const current=R.cleanProgress(progress,config,date);
+ undo.hidden=!Object.prototype.hasOwnProperty.call(current,'undoOffsets');undo.disabled=false;
+ $('shift-status').textContent=current.offsets?'Today’s times have been adjusted. The regular schedule for other days is unchanged.':'Applies only today. The regular schedule for other days is unchanged.';
+ try{
+  const updated=readEditor();R.effectiveConfig(updated,progress,date);
+  const result=R.shiftRemaining(updated,progress,Number($('shift-minutes').value),date);
+  preview.classList.remove('error');
+  preview.innerHTML='<p>Chores to shift: '+result.changes.length+'</p><ul class="shift-preview-list">'+result.changes.map(ch=>'<li><strong>'+escape(ch.title)+'</strong><span><s>'+escape(formatTime(ch.beforeStart,updated.format))+'–'+escape(formatTime(ch.beforeEnd,updated.format))+'</s> → <b>'+escape(formatTime(ch.start,updated.format))+'–'+escape(formatTime(ch.end,updated.format))+'</b></span></li>').join('')+'</ul>';
+  $('shift-apply').disabled=false;
+ }catch(error){preview.classList.add('error');preview.textContent=error.message;$('shift-apply').disabled=true;}
+}
+for(const button of document.querySelectorAll('[data-shift-minutes]'))button.addEventListener('click',()=>{$('shift-minutes').value=button.dataset.shiftMinutes;refreshShiftPreview();});
+$('shift-apply').addEventListener('click',()=>{
+ try{
+  const updated=readEditor(),date=new Date(),offset=Number($('shift-minutes').value);R.effectiveConfig(updated,progress,date);
+  const result=R.shiftRemaining(updated,progress,offset,date);
+  finishSettings(updated,result.progress,'Today’s times: '+(offset>0?'+':'')+offset+' min.');
+ }catch(error){settingsError(error);refreshShiftPreview();}
+});
+$('shift-undo').addEventListener('click',()=>{
+ try{const updated=readEditor();finishSettings(updated,R.undoShift(updated,progress,new Date()),'Last daily shift undone.');}
+ catch(error){settingsError(error);}
+});
+for(const event of ['input','change'])$('settings-form').addEventListener(event,refreshShiftPreview);
+$('settings-form').addEventListener('click',()=>{if(settings.open)refreshShiftPreview();});
 for(const button of document.querySelectorAll('.close-dialog'))button.addEventListener('click',saveAndCloseSettings);
 $('settings-dialog').addEventListener('cancel',event=>{event.preventDefault();saveAndCloseSettings();});
 let backdropPressed=false;

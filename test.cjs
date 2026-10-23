@@ -101,3 +101,54 @@ test('backgrounding during video startup cannot reactivate keep-awake',async()=>
  let finish;const h=awakeHarness(null,()=>new Promise(resolve=>{finish=resolve;})),enabling=h.controller.enable();
  h.document.hidden=true;await h.controller.sync();finish();assert.equal(await enabling,false);assert.equal(h.states.at(-1),'paused');assert.equal(h.videos[0].paused,true);h.controller.disable();
 });
+
+test('today shift moves future and overdue unfinished chores by the same offset',()=>{
+ const config=R.defaults(),d=new Date(2026,9,23,19,10),p=R.freshProgress(d);
+ for(const kid of config.kids)p.done[R.completionKey(kid.id,'pajamas')]={at:d.toISOString()};
+ p.done[R.completionKey(config.kids[0].id,'supper')]={at:d.toISOString()};
+ const original=JSON.stringify(config),saved=JSON.stringify(p),result=R.shiftRemaining(config,p,15,d),today=R.effectiveConfig(config,result.progress,d);
+ assert.equal(result.changes.length,5);assert.ok(!result.changes.some(c=>c.id==='pajamas'));
+ for(const change of result.changes){assert.equal(R.minutes(change.start)-R.minutes(change.beforeStart),15);assert.equal(R.minutes(change.end)-R.minutes(change.beforeEnd),15);}
+ assert.equal(today.chores.find(c=>c.id==='supper').start,'18:15');assert.equal(today.chores.find(c=>c.id==='pajamas').start,'18:50');
+ assert.deepEqual({...result.progress.done},{...p.done});assert.equal(JSON.stringify(config),original);assert.equal(JSON.stringify(p),saved);
+});
+test('an early-completed future chore is still shifted',()=>{
+ const c=R.defaults(),d=new Date(2026,9,23,17),p=R.freshProgress(d);
+ for(const kid of c.kids)p.done[R.completionKey(kid.id,'bed')]={at:d.toISOString()};
+ const result=R.shiftRemaining(c,p,10,d);assert.ok(result.changes.some(ch=>ch.id==='bed'));assert.equal(Object.keys(result.progress.done).length,2);
+});
+test('daily shifts accumulate and undo restores times without undoing later completions',()=>{
+ const c=R.defaults(),d=new Date(2026,9,23,19),first=R.shiftRemaining(c,R.freshProgress(d),15,d),second=R.shiftRemaining(c,first.progress,10,d);
+ const key=R.completionKey(c.kids[0].id,'supper');second.progress.done[key]={at:d.toISOString()};
+ const undo=R.undoShift(c,second.progress,d);assert.equal(undo.offsets.supper,15);assert.ok(undo.done[key]);assert.equal(undo.undoOffsets,undefined);
+ const baseline=R.undoShift(c,first.progress,d);assert.equal(baseline.offsets,undefined);
+});
+test('shifted times and undo survive reload but expire at local midnight',()=>{
+ const c=R.defaults(),d=new Date(2026,9,23,19),shift=R.shiftRemaining(c,R.freshProgress(d),15,d);
+ const reload=R.cleanProgress(JSON.parse(JSON.stringify(shift.progress)),c,d);assert.equal(R.effectiveConfig(c,reload,d).chores[0].start,'18:15');assert.deepEqual({...reload.undoOffsets},{});
+ const tomorrow=new Date(2026,9,24),fresh=R.cleanProgress(reload,c,tomorrow);assert.equal(fresh.offsets,undefined);assert.equal(fresh.undoOffsets,undefined);assert.equal(R.effectiveConfig(c,shift.progress,tomorrow).chores[0].start,'18:00');
+});
+test('shift rejects midnight crossings and bad offsets atomically',()=>{
+ const c=R.defaults(),d=new Date(2026,9,23,19),p=R.freshProgress(d),saved=JSON.stringify(p);
+ for(const offset of [0,1.5,NaN,Infinity,'15',1440,240,-1200])assert.throws(()=>R.shiftRemaining(c,p,offset,d));
+ assert.equal(JSON.stringify(p),saved);const earlier=R.shiftRemaining(c,p,-10,d);assert.equal(earlier.changes[0].start,'17:50');
+});
+test('completed past chores do not prevent shifting unfinished chores through their history',()=>{
+ const c=R.defaults(),d=new Date(2026,9,23,21),p=R.freshProgress(d);
+ for(const chore of c.chores.filter(ch=>ch.id!=='supper'))for(const kid of chore.kidIds)p.done[R.completionKey(kid,chore.id)]={at:d.toISOString()};
+ const result=R.shiftRemaining(c,p,30,d);assert.equal(result.changes.length,1);assert.equal(result.changes[0].end,'19:15');assert.doesNotThrow(()=>R.timeline(R.effectiveConfig(c,result.progress,d)));
+});
+test('nothing shifts when every past chore is finished',()=>{
+ const c=R.defaults(),d=new Date(2026,9,23,21),p=R.freshProgress(d);
+ for(const chore of c.chores)for(const kid of chore.kidIds)p.done[R.completionKey(kid,chore.id)]={at:d.toISOString()};
+ assert.throws(()=>R.shiftRemaining(c,p,15,d),/No future/);
+});
+test('shift cleanup drops invalid and removed chore offsets and keeps valid ones',()=>{
+ const c=R.defaults(),d=new Date(2026,9,23,19),p=R.freshProgress(d);
+ p.offsets={supper:15,pajamas:'10',teeth:1.5,prayer:1440,toilet:-1500,deleted:10};p.undoOffsets={supper:5,deleted:30};
+ const clean=R.cleanProgress(p,c,d);assert.deepEqual({...clean.offsets},{supper:15});assert.deepEqual({...clean.undoOffsets},{supper:5});
+});
+test('celebration lateness uses the shifted deadline',()=>{
+ const c=R.defaults(),d=new Date(2026,9,23,18,50),shift=R.shiftRemaining(c,R.freshProgress(d),15,d),chore=R.effectiveConfig(c,shift.progress,d).chores.find(ch=>ch.id==='supper');
+ assert.equal(R.isLate(c.chores[0],R.timeOfDay(d)),true);assert.equal(R.isLate(chore,R.timeOfDay(d)),false);
+});

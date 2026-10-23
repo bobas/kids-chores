@@ -47,7 +47,48 @@ function cleanProgress(progress,config,date,legacy=false){
  const clean=freshProgress(date);
  if(!progress||progress.day!==clean.day||!progress.done||typeof progress.done!=='object')return clean;
  for(const chore of config.chores)for(const kidId of chore.kidIds){const key=completionKey(kidId,chore.id),oldKey=legacy&&kidId===config.kids[0].id?chore.id:key,item=Object.prototype.hasOwnProperty.call(progress.done,oldKey)?progress.done[oldKey]:null;if(item&&typeof item.at==='string'&&Number.isFinite(Date.parse(item.at))&&dayKey(new Date(item.at))===clean.day)clean.done[key]={at:item.at};}
+ const offsets=cleanOffsets(progress.offsets,config);if(Object.keys(offsets).length)clean.offsets=offsets;
+ if(Object.prototype.hasOwnProperty.call(progress,'undoOffsets')&&progress.undoOffsets&&typeof progress.undoOffsets==='object'&&!Array.isArray(progress.undoOffsets))clean.undoOffsets=cleanOffsets(progress.undoOffsets,config);
  return clean;
+}
+function cleanOffsets(value,config){
+ const offsets=Object.create(null);
+ if(!value||typeof value!=='object'||Array.isArray(value))return offsets;
+ for(const chore of config.chores){const offset=Object.prototype.hasOwnProperty.call(value,chore.id)?value[chore.id]:0;if(Number.isInteger(offset)&&offset!==0&&minutes(chore.start)+offset>=0&&minutes(chore.end)+offset<1440)offsets[chore.id]=offset;}
+ return offsets;
+}
+function clockTime(value){return String(Math.floor(value/60)).padStart(2,'0')+':'+String(value%60).padStart(2,'0');}
+function effectiveConfig(config,progress,date=new Date()){
+ const offsets=progress&&progress.day===dayKey(date)&&progress.offsets||Object.create(null);
+ const chores=config.chores.map(chore=>{
+  const offset=Object.prototype.hasOwnProperty.call(offsets,chore.id)?offsets[chore.id]:0;
+  const start=minutes(chore.start)+offset,end=minutes(chore.end)+offset;
+  if(!Number.isInteger(offset)||start<0||end>=1440)throw Error(`Today’s shift for “${chore.title}” would cross midnight. Undo the shift or edit the regular times.`);
+  return {...chore,start:clockTime(start),end:clockTime(end)};
+ }).sort((a,b)=>minutes(a.start)-minutes(b.start));
+ return {...config,chores};
+}
+function shiftRemaining(config,progress,offset,date=new Date()){
+ if(!Number.isInteger(offset)||offset===0||Math.abs(offset)>=1440)throw Error('Enter a nonzero offset in whole minutes (at most 1439).');
+ const next=cleanProgress(progress,config,date),today=effectiveConfig(config,next,date),now=timeOfDay(date),changes=[];
+ const offsets=Object.assign(Object.create(null),next.offsets||{});
+ for(const chore of today.chores){
+  if(minutes(chore.start)<=now&&chore.kidIds.every(kid=>next.done[completionKey(kid,chore.id)]))continue;
+  const start=minutes(chore.start)+offset,end=minutes(chore.end)+offset;
+  if(start<0||end>=1440)throw Error(`Shifting “${chore.title}” would cross midnight. Choose a smaller offset.`);
+  changes.push({id:chore.id,title:chore.title,beforeStart:chore.start,beforeEnd:chore.end,start:clockTime(start),end:clockTime(end)});
+  const total=(offsets[chore.id]||0)+offset;if(total)offsets[chore.id]=total;else delete offsets[chore.id];
+ }
+ if(!changes.length)throw Error('No future or unfinished chores remain.');
+ next.undoOffsets=Object.assign(Object.create(null),next.offsets||{});
+ if(Object.keys(offsets).length)next.offsets=offsets;else delete next.offsets;
+ return {progress:next,changes};
+}
+function undoShift(config,progress,date=new Date()){
+ const next=cleanProgress(progress,config,date);
+ if(!Object.prototype.hasOwnProperty.call(next,'undoOffsets'))throw Error('There is no shift to undo today.');
+ if(Object.keys(next.undoOffsets).length)next.offsets=next.undoOffsets;else delete next.offsets;
+ delete next.undoOffsets;return next;
 }
 function onTime(chore,now){return now>=minutes(chore.start)&&now<minutes(chore.end);}
 function isLate(chore,now){return now>minutes(chore.end);}
@@ -83,6 +124,6 @@ function kidTheme(color){
  const luminance=linear[0]*.2126+linear[1]*.7152+linear[2]*.0722;
  return {color,bg,ink:luminance>.179?'#17251d':'#ffffff'};
 }
-const api={KID_COLORS,kidTheme,ICONS,defaults,minutes,dayKey,timeOfDay,migrate,validate,completionKey,freshProgress,cleanProgress,onTime,isLate,status,timeline,position,rangeSector};
+const api={KID_COLORS,kidTheme,ICONS,defaults,minutes,dayKey,timeOfDay,migrate,validate,completionKey,freshProgress,cleanProgress,effectiveConfig,shiftRemaining,undoShift,onTime,isLate,status,timeline,position,rangeSector};
 if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.Routine=api;
 })(typeof window!=='undefined'?window:globalThis);
