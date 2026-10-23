@@ -1,7 +1,7 @@
 (()=>{
 'use strict';
 const R=window.Routine,$=id=>document.getElementById(id),KEY='evening-garden-v1';
-let config=R.defaults(),progress=R.freshProgress(new Date()),renderStamp='',toastTimer,lastCelebration=-1,lastReminder=-1,layout;
+let config=R.defaults(),progress=R.freshProgress(new Date()),renderStamp='',toastTimer,layout;
 let todayConfig=config;
 // Twemoji 15.1.0 graphics: Copyright Twitter, Inc. and other contributors.
 // CC BY 4.0: https://creativecommons.org/licenses/by/4.0/
@@ -149,10 +149,14 @@ function jumpNow(){if(!layout)return;const now=R.timeOfDay(new Date()),target=(n
 $('jump-now').addEventListener('click',jumpNow);
 $('kid-columns').addEventListener('change',event=>{
  const button=event.target.closest('.child-check');if(!button)return;const kidId=button.dataset.kid,choreId=button.dataset.id,wasChecked=button.checked;tick();const kid=config.kids.find(k=>k.id===kidId),chore=todayConfig.chores.find(c=>c.id===choreId&&c.kidIds.includes(kidId));if(!kid||!chore)return;
- const key=R.completionKey(kidId,choreId),undo=!wasChecked,date=new Date();if(undo)delete progress.done[key];else progress.done[key]={at:date.toISOString()};save();tick(true);
- if(undo){dismissCelebration();return;}
+ const key=R.completionKey(kidId,choreId),undo=!wasChecked,date=new Date();
+ if(progress.day!==R.dayKey(date)){progress=R.freshProgress(date);todayConfig=R.effectiveConfig(config,progress,date);}
+ if(undo){delete progress.done[key];save();tick(true);dismissCelebration();return;}
+ progress.done[key]={at:date.toISOString()};
  const personalDone=assigned(kidId).every(c=>done(kidId,c.id)),everyone=config.chores.every(c=>c.kidIds.every(k=>done(k,c.id)));
- if(config.celebrations)celebrate(personalDone,kid.name,everyone,R.isLate(chore,R.timeOfDay(date)));else notify(`${kid.name}: done!`);
+ const result=R.assignCelebration(config,progress,kidId,choreId,{grand:personalDone,everyone,late:R.isLate(todayConfig.chores.find(c=>c.id===choreId),R.timeOfDay(date))},date);
+ progress=result.progress;save();tick(true);
+ if(config.celebrations)celebrate(result.celebration,kid.name);else notify(`${kid.name}: done!`);
 });
 const celebrationThemes=[
  ['🌟','A little star!','Look at you shine.','✦','burst'],['🦋','Look at you grow!','One lovely step at a time.','🦋','float'],['🎈','Up, up, hooray!','You did your little step.','🎈','float'],['🌸','Beautifully done!','Our evening is blooming.','🌸','rain'],['🚀','You’re soaring!','A little closer to dreamland.','✧','burst'],['🐝','What a busy bee!','Time for a happy little wiggle.','🐝','orbit'],['🌈','A splash of happy!','You made this moment brighter.','●','rain'],['✨','Sparkle time!','Look at that little win.','✦','orbit'],['🐸','Hip, hip, hop!','You did it. Give a little hop!','●','bounce'],['🫧','Pop! Well done!','A bubbly little celebration.','○','float'],['🍓','Sweet little win!','That was berry well done.','🍓','rain'],['🌻','Hello, sunshine!','A little step. A happy heart.','✿','burst'],['🐞','Lucky little you!','Another step, all done.','🐞','bounce'],['🎉','Hooray for you!','A little cheer for a lovely effort.','▰','rain'],['🐠','Just keep swimming!','You’re doing swimmingly.','🐠','float'],['💛','A heart full of happy!','You can be proud of yourself.','♥','burst'],['🪁','Flying high!','Look how far you’ve come.','◆','orbit'],['🍂','A gentle little cheer!','One step closer to cozy.','🍂','rain'],['🐇','Hop to the happy!','A lovely little leap forward.','✧','bounce'],['🌙','Dreamland is closer!','You’re making a lovely evening.','★','float']
@@ -165,16 +169,16 @@ const lateReminders=[
  'A little shell-powered speed next time?',
  'Finished! Shall we race the clock next time?'
 ];
-function celebrate(grand=false, childName='', everyone=false, late=false) {
- clearTimeout(toastTimer);$('toast').hidden=true;let index;
- do{index=Math.floor(Math.random()*celebrationThemes.length);}while(index===lastCelebration);lastCelebration=index;
+function celebrate(celebration=null,childName='') {
+ clearTimeout(toastTimer);$('toast').hidden=true;
+ const choice=celebration||R.makeCelebration(),{grand,everyone,late}=choice,index=choice.theme,random=R.celebrationRandom(choice.seed);
  const [icon,title,subtitle,particle,motion]=late?['🐢','','','🍃','float']:grand?['🏆','You did every little step!','Big hugs. Sweet dreams. See you tomorrow!','✦','rain']:celebrationThemes[index];
  const layer=$('celebration');(nativeDialog&&settings.open ? settings : document.body).append(layer);layer.classList.toggle('grand',grand);layer.classList.toggle('late',late);layer.dataset.motion=motion;
  $('celebration-icon').innerHTML=iconMarkup(icon);
- let reminder='';if(late){let next;do{next=Math.floor(Math.random()*lateReminders.length);}while(next===lastReminder);lastReminder=next;reminder=lateReminders[next];}
+ const reminder=late?lateReminders[choice.reminder]:'';
  $('celebration-title').textContent=late?reminder:everyone?'Everyone: all done!':grand&&childName?`${childName}: all done!`:title;
  $('celebration-subtitle').textContent=late?(everyone?'Everyone: all done!':grand?`${childName}: all done!`:`${childName}, you finished!`):childName&&!grand?childName:'';
- layer.querySelector('.celebration-particles').innerHTML=Array.from({length:late?8:grand?64:30},(_,i)=>{const a=(i/(late?8:grand?64:30))*Math.PI*2,d=120+Math.random()*300,colors=['#d8b35b','#a0b67e','#b19bc5','#d59678','#7ca6a1'];return `<span class="particle" style="--x:${Math.cos(a)*d}px;--y:${Math.sin(a)*d}px;--r:${180+Math.random()*540}deg;--size:${24+Math.random()*30}px;--color:${colors[i%colors.length]};--duration:${1.5+Math.random()*1.3}s;--delay:${Math.random()*.4}s">${iconMarkup(particle)}</span>`;}).join('');
+ layer.querySelector('.celebration-particles').innerHTML=Array.from({length:late?8:grand?64:30},(_,i)=>{const a=(i/(late?8:grand?64:30))*Math.PI*2,d=120+random()*300,colors=['#d8b35b','#a0b67e','#b19bc5','#d59678','#7ca6a1'];return `<span class="particle" style="--x:${Math.cos(a)*d}px;--y:${Math.sin(a)*d}px;--r:${180+random()*540}deg;--size:${24+random()*30}px;--color:${colors[i%colors.length]};--duration:${1.5+random()*1.3}s;--delay:${random()*.4}s">${iconMarkup(particle)}</span>`;}).join('');
  layer.hidden=false;
 }
 function dismissCelebration(){$('celebration').hidden=true;replaceChildren($('celebration').querySelector('.celebration-particles'));}
@@ -245,7 +249,7 @@ $('discard-settings').addEventListener('click',()=>{dismissCelebration();closeSe
 $('settings-form').addEventListener('submit',event=>event.preventDefault());
 $('add-kid').addEventListener('click',()=>{const child={id:id('child'),name:'',color:R.KID_COLORS[$('kids-editor').children.length%R.KID_COLORS.length]};$('kids-editor').append(kidRow(child,$('kids-editor').children.length));refreshAssignments();$('add-kid').disabled=$('kids-editor').children.length>=8;$('kids-editor').lastChild.querySelector('.kid-name-input').focus();});
 $('add-chore').addEventListener('click',()=>{const rows=[...$('chore-editor').children],last=rows.length?rows[rows.length-1].querySelector('.edit-end').value:'18:00';let start=R.minutes(last);if(!Number.isFinite(start)||start>=1439)start=1080;const row=editorRow({id:id('chore'),title:'',icon:'⭐',start:timeString(start),end:timeString(Math.min(start+15,1439)),kidIds:currentKids().map(k=>k.id)});$('chore-editor').append(row);updateAddButton();row.querySelector('.edit-title').focus();});
-$('preview-celebration').addEventListener('click',()=>celebrate(false));
+$('preview-celebration').addEventListener('click',()=>celebrate());
 $('export-settings').addEventListener('click',()=>{try{const value=readEditor(),url=URL.createObjectURL(new Blob([JSON.stringify(value,null,2)],{type:'application/json'})),a=document.createElement('a');a.href=url;a.download='evening-garden-routine.json';a.hidden=true;document.body.appendChild(a);a.click();setTimeout(()=>{a.remove();URL.revokeObjectURL(url);},1000);}catch(error){settingsError(error);}});
 $('import-settings').addEventListener('click',()=>$('import-file').click());
 $('import-file').addEventListener('change',async event=>{const file=event.target.files[0];if(!file)return;try{if(file.size>100000)throw Error('Choose a routine file smaller than 100 KB.');populateEditor(R.validate(JSON.parse(await readFile(file))));notify('Loaded. Close Settings to save.');}catch(error){settingsError(new Error(error instanceof SyntaxError?'Invalid JSON file.':error.message));}finally{event.target.value='';}});

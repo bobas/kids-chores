@@ -1,5 +1,6 @@
 (function(root){
 'use strict';
+const CELEBRATION_COUNT=20,LATE_REMINDER_COUNT=6;
 const KID_COLORS=['#688a51','#9471aa','#b9864d','#5c929a','#aa7080','#7b85b2','#a69a4d','#609578'];
 const ICONS=['🍽️','🧸','🪥','🙏','🚽','🛏️','🛁','📖','👕','🧹','💧','🐶','🎒','⭐','🌙','🧩'];
 const defaults=()=>({version:2,format:'24',celebrations:true,kids:[{id:'child-1',name:'Child 1',color:KID_COLORS[0]},{id:'child-2',name:'Child 2',color:KID_COLORS[1]}],chores:[
@@ -47,9 +48,34 @@ function cleanProgress(progress,config,date,legacy=false){
  const clean=freshProgress(date);
  if(!progress||progress.day!==clean.day||!progress.done||typeof progress.done!=='object')return clean;
  for(const chore of config.chores)for(const kidId of chore.kidIds){const key=completionKey(kidId,chore.id),oldKey=legacy&&kidId===config.kids[0].id?chore.id:key,item=Object.prototype.hasOwnProperty.call(progress.done,oldKey)?progress.done[oldKey]:null;if(item&&typeof item.at==='string'&&Number.isFinite(Date.parse(item.at))&&dayKey(new Date(item.at))===clean.day)clean.done[key]={at:item.at};}
+ const celebrations=cleanCelebrations(progress.celebrations,config);if(Object.keys(celebrations).length)clean.celebrations=celebrations;
  const offsets=cleanOffsets(progress.offsets,config);if(Object.keys(offsets).length)clean.offsets=offsets;
  if(Object.prototype.hasOwnProperty.call(progress,'undoOffsets')&&progress.undoOffsets&&typeof progress.undoOffsets==='object'&&!Array.isArray(progress.undoOffsets))clean.undoOffsets=cleanOffsets(progress.undoOffsets,config);
  return clean;
+}
+function cleanCelebrations(value,config){
+ const celebrations=Object.create(null);
+ if(!value||typeof value!=='object'||Array.isArray(value))return celebrations;
+ for(const chore of config.chores)for(const kid of chore.kidIds){
+  const key=completionKey(kid,chore.id),item=Object.prototype.hasOwnProperty.call(value,key)?value[key]:null;
+  if(item&&Number.isInteger(item.theme)&&item.theme>=0&&item.theme<CELEBRATION_COUNT&&Number.isInteger(item.reminder)&&item.reminder>=0&&item.reminder<LATE_REMINDER_COUNT&&Number.isInteger(item.seed)&&item.seed>=0&&item.seed<=4294967295&&['late','grand','everyone'].every(flag=>typeof item[flag]==='boolean'))celebrations[key]={theme:item.theme,reminder:item.reminder,seed:item.seed,late:item.late,grand:item.grand,everyone:item.everyone};
+ }
+ return celebrations;
+}
+function makeCelebration(flags={},random=Math.random){
+ return {theme:Math.floor(random()*CELEBRATION_COUNT),reminder:Math.floor(random()*LATE_REMINDER_COUNT),seed:Math.floor(random()*4294967296),late:!!flags.late,grand:!!flags.grand,everyone:!!flags.everyone};
+}
+function assignCelebration(config,progress,kidId,choreId,flags={},date=new Date(),random=Math.random){
+ const chore=config.chores.find(ch=>ch.id===choreId&&ch.kidIds.includes(kidId));
+ if(!chore)throw Error('A celebration must belong to an assigned child’s chore.');
+ const next=cleanProgress(progress,config,date),key=completionKey(kidId,choreId);
+ if(!next.celebrations)next.celebrations=Object.create(null);
+ if(!next.celebrations[key])next.celebrations[key]=makeCelebration(flags,random);
+ return {progress:next,celebration:next.celebrations[key]};
+}
+function celebrationRandom(seed){
+ let state=seed>>>0;
+ return ()=>{state=(Math.imul(state,1664525)+1013904223)>>>0;return state/4294967296;};
 }
 function cleanOffsets(value,config){
  const offsets=Object.create(null);
@@ -124,6 +150,6 @@ function kidTheme(color){
  const luminance=linear[0]*.2126+linear[1]*.7152+linear[2]*.0722;
  return {color,bg,ink:luminance>.179?'#17251d':'#ffffff'};
 }
-const api={KID_COLORS,kidTheme,ICONS,defaults,minutes,dayKey,timeOfDay,migrate,validate,completionKey,freshProgress,cleanProgress,effectiveConfig,shiftRemaining,undoShift,onTime,isLate,status,timeline,position,rangeSector};
+const api={CELEBRATION_COUNT,LATE_REMINDER_COUNT,makeCelebration,assignCelebration,celebrationRandom,KID_COLORS,kidTheme,ICONS,defaults,minutes,dayKey,timeOfDay,migrate,validate,completionKey,freshProgress,cleanProgress,effectiveConfig,shiftRemaining,undoShift,onTime,isLate,status,timeline,position,rangeSector};
 if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.Routine=api;
 })(typeof window!=='undefined'?window:globalThis);

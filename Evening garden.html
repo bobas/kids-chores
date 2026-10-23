@@ -122,6 +122,7 @@ button:focus,input:focus,select:focus,#schedule-scroll:focus{outline:3px solid #
 <script>
 (function(root){
 'use strict';
+const CELEBRATION_COUNT=20,LATE_REMINDER_COUNT=6;
 const KID_COLORS=['#688a51','#9471aa','#b9864d','#5c929a','#aa7080','#7b85b2','#a69a4d','#609578'];
 const ICONS=['🍽️','🧸','🪥','🙏','🚽','🛏️','🛁','📖','👕','🧹','💧','🐶','🎒','⭐','🌙','🧩'];
 const defaults=()=>({version:2,format:'24',celebrations:true,kids:[{id:'child-1',name:'Child 1',color:KID_COLORS[0]},{id:'child-2',name:'Child 2',color:KID_COLORS[1]}],chores:[
@@ -169,9 +170,34 @@ function cleanProgress(progress,config,date,legacy=false){
  const clean=freshProgress(date);
  if(!progress||progress.day!==clean.day||!progress.done||typeof progress.done!=='object')return clean;
  for(const chore of config.chores)for(const kidId of chore.kidIds){const key=completionKey(kidId,chore.id),oldKey=legacy&&kidId===config.kids[0].id?chore.id:key,item=Object.prototype.hasOwnProperty.call(progress.done,oldKey)?progress.done[oldKey]:null;if(item&&typeof item.at==='string'&&Number.isFinite(Date.parse(item.at))&&dayKey(new Date(item.at))===clean.day)clean.done[key]={at:item.at};}
+ const celebrations=cleanCelebrations(progress.celebrations,config);if(Object.keys(celebrations).length)clean.celebrations=celebrations;
  const offsets=cleanOffsets(progress.offsets,config);if(Object.keys(offsets).length)clean.offsets=offsets;
  if(Object.prototype.hasOwnProperty.call(progress,'undoOffsets')&&progress.undoOffsets&&typeof progress.undoOffsets==='object'&&!Array.isArray(progress.undoOffsets))clean.undoOffsets=cleanOffsets(progress.undoOffsets,config);
  return clean;
+}
+function cleanCelebrations(value,config){
+ const celebrations=Object.create(null);
+ if(!value||typeof value!=='object'||Array.isArray(value))return celebrations;
+ for(const chore of config.chores)for(const kid of chore.kidIds){
+  const key=completionKey(kid,chore.id),item=Object.prototype.hasOwnProperty.call(value,key)?value[key]:null;
+  if(item&&Number.isInteger(item.theme)&&item.theme>=0&&item.theme<CELEBRATION_COUNT&&Number.isInteger(item.reminder)&&item.reminder>=0&&item.reminder<LATE_REMINDER_COUNT&&Number.isInteger(item.seed)&&item.seed>=0&&item.seed<=4294967295&&['late','grand','everyone'].every(flag=>typeof item[flag]==='boolean'))celebrations[key]={theme:item.theme,reminder:item.reminder,seed:item.seed,late:item.late,grand:item.grand,everyone:item.everyone};
+ }
+ return celebrations;
+}
+function makeCelebration(flags={},random=Math.random){
+ return {theme:Math.floor(random()*CELEBRATION_COUNT),reminder:Math.floor(random()*LATE_REMINDER_COUNT),seed:Math.floor(random()*4294967296),late:!!flags.late,grand:!!flags.grand,everyone:!!flags.everyone};
+}
+function assignCelebration(config,progress,kidId,choreId,flags={},date=new Date(),random=Math.random){
+ const chore=config.chores.find(ch=>ch.id===choreId&&ch.kidIds.includes(kidId));
+ if(!chore)throw Error('A celebration must belong to an assigned child’s chore.');
+ const next=cleanProgress(progress,config,date),key=completionKey(kidId,choreId);
+ if(!next.celebrations)next.celebrations=Object.create(null);
+ if(!next.celebrations[key])next.celebrations[key]=makeCelebration(flags,random);
+ return {progress:next,celebration:next.celebrations[key]};
+}
+function celebrationRandom(seed){
+ let state=seed>>>0;
+ return ()=>{state=(Math.imul(state,1664525)+1013904223)>>>0;return state/4294967296;};
 }
 function cleanOffsets(value,config){
  const offsets=Object.create(null);
@@ -246,7 +272,7 @@ function kidTheme(color){
  const luminance=linear[0]*.2126+linear[1]*.7152+linear[2]*.0722;
  return {color,bg,ink:luminance>.179?'#17251d':'#ffffff'};
 }
-const api={KID_COLORS,kidTheme,ICONS,defaults,minutes,dayKey,timeOfDay,migrate,validate,completionKey,freshProgress,cleanProgress,effectiveConfig,shiftRemaining,undoShift,onTime,isLate,status,timeline,position,rangeSector};
+const api={CELEBRATION_COUNT,LATE_REMINDER_COUNT,makeCelebration,assignCelebration,celebrationRandom,KID_COLORS,kidTheme,ICONS,defaults,minutes,dayKey,timeOfDay,migrate,validate,completionKey,freshProgress,cleanProgress,effectiveConfig,shiftRemaining,undoShift,onTime,isLate,status,timeline,position,rangeSector};
 if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.Routine=api;
 })(typeof window!=='undefined'?window:globalThis);
 
@@ -255,7 +281,7 @@ if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.Rout
 (()=>{
 'use strict';
 const R=window.Routine,$=id=>document.getElementById(id),KEY='evening-garden-v1';
-let config=R.defaults(),progress=R.freshProgress(new Date()),renderStamp='',toastTimer,lastCelebration=-1,lastReminder=-1,layout;
+let config=R.defaults(),progress=R.freshProgress(new Date()),renderStamp='',toastTimer,layout;
 let todayConfig=config;
 // Twemoji 15.1.0 graphics: Copyright Twitter, Inc. and other contributors.
 // CC BY 4.0: https://creativecommons.org/licenses/by/4.0/
@@ -403,10 +429,14 @@ function jumpNow(){if(!layout)return;const now=R.timeOfDay(new Date()),target=(n
 $('jump-now').addEventListener('click',jumpNow);
 $('kid-columns').addEventListener('change',event=>{
  const button=event.target.closest('.child-check');if(!button)return;const kidId=button.dataset.kid,choreId=button.dataset.id,wasChecked=button.checked;tick();const kid=config.kids.find(k=>k.id===kidId),chore=todayConfig.chores.find(c=>c.id===choreId&&c.kidIds.includes(kidId));if(!kid||!chore)return;
- const key=R.completionKey(kidId,choreId),undo=!wasChecked,date=new Date();if(undo)delete progress.done[key];else progress.done[key]={at:date.toISOString()};save();tick(true);
- if(undo){dismissCelebration();return;}
+ const key=R.completionKey(kidId,choreId),undo=!wasChecked,date=new Date();
+ if(progress.day!==R.dayKey(date)){progress=R.freshProgress(date);todayConfig=R.effectiveConfig(config,progress,date);}
+ if(undo){delete progress.done[key];save();tick(true);dismissCelebration();return;}
+ progress.done[key]={at:date.toISOString()};
  const personalDone=assigned(kidId).every(c=>done(kidId,c.id)),everyone=config.chores.every(c=>c.kidIds.every(k=>done(k,c.id)));
- if(config.celebrations)celebrate(personalDone,kid.name,everyone,R.isLate(chore,R.timeOfDay(date)));else notify(`${kid.name}: done!`);
+ const result=R.assignCelebration(config,progress,kidId,choreId,{grand:personalDone,everyone,late:R.isLate(todayConfig.chores.find(c=>c.id===choreId),R.timeOfDay(date))},date);
+ progress=result.progress;save();tick(true);
+ if(config.celebrations)celebrate(result.celebration,kid.name);else notify(`${kid.name}: done!`);
 });
 const celebrationThemes=[
  ['🌟','A little star!','Look at you shine.','✦','burst'],['🦋','Look at you grow!','One lovely step at a time.','🦋','float'],['🎈','Up, up, hooray!','You did your little step.','🎈','float'],['🌸','Beautifully done!','Our evening is blooming.','🌸','rain'],['🚀','You’re soaring!','A little closer to dreamland.','✧','burst'],['🐝','What a busy bee!','Time for a happy little wiggle.','🐝','orbit'],['🌈','A splash of happy!','You made this moment brighter.','●','rain'],['✨','Sparkle time!','Look at that little win.','✦','orbit'],['🐸','Hip, hip, hop!','You did it. Give a little hop!','●','bounce'],['🫧','Pop! Well done!','A bubbly little celebration.','○','float'],['🍓','Sweet little win!','That was berry well done.','🍓','rain'],['🌻','Hello, sunshine!','A little step. A happy heart.','✿','burst'],['🐞','Lucky little you!','Another step, all done.','🐞','bounce'],['🎉','Hooray for you!','A little cheer for a lovely effort.','▰','rain'],['🐠','Just keep swimming!','You’re doing swimmingly.','🐠','float'],['💛','A heart full of happy!','You can be proud of yourself.','♥','burst'],['🪁','Flying high!','Look how far you’ve come.','◆','orbit'],['🍂','A gentle little cheer!','One step closer to cozy.','🍂','rain'],['🐇','Hop to the happy!','A lovely little leap forward.','✧','bounce'],['🌙','Dreamland is closer!','You’re making a lovely evening.','★','float']
@@ -419,16 +449,16 @@ const lateReminders=[
  'A little shell-powered speed next time?',
  'Finished! Shall we race the clock next time?'
 ];
-function celebrate(grand=false, childName='', everyone=false, late=false) {
- clearTimeout(toastTimer);$('toast').hidden=true;let index;
- do{index=Math.floor(Math.random()*celebrationThemes.length);}while(index===lastCelebration);lastCelebration=index;
+function celebrate(celebration=null,childName='') {
+ clearTimeout(toastTimer);$('toast').hidden=true;
+ const choice=celebration||R.makeCelebration(),{grand,everyone,late}=choice,index=choice.theme,random=R.celebrationRandom(choice.seed);
  const [icon,title,subtitle,particle,motion]=late?['🐢','','','🍃','float']:grand?['🏆','You did every little step!','Big hugs. Sweet dreams. See you tomorrow!','✦','rain']:celebrationThemes[index];
  const layer=$('celebration');(nativeDialog&&settings.open ? settings : document.body).append(layer);layer.classList.toggle('grand',grand);layer.classList.toggle('late',late);layer.dataset.motion=motion;
  $('celebration-icon').innerHTML=iconMarkup(icon);
- let reminder='';if(late){let next;do{next=Math.floor(Math.random()*lateReminders.length);}while(next===lastReminder);lastReminder=next;reminder=lateReminders[next];}
+ const reminder=late?lateReminders[choice.reminder]:'';
  $('celebration-title').textContent=late?reminder:everyone?'Everyone: all done!':grand&&childName?`${childName}: all done!`:title;
  $('celebration-subtitle').textContent=late?(everyone?'Everyone: all done!':grand?`${childName}: all done!`:`${childName}, you finished!`):childName&&!grand?childName:'';
- layer.querySelector('.celebration-particles').innerHTML=Array.from({length:late?8:grand?64:30},(_,i)=>{const a=(i/(late?8:grand?64:30))*Math.PI*2,d=120+Math.random()*300,colors=['#d8b35b','#a0b67e','#b19bc5','#d59678','#7ca6a1'];return `<span class="particle" style="--x:${Math.cos(a)*d}px;--y:${Math.sin(a)*d}px;--r:${180+Math.random()*540}deg;--size:${24+Math.random()*30}px;--color:${colors[i%colors.length]};--duration:${1.5+Math.random()*1.3}s;--delay:${Math.random()*.4}s">${iconMarkup(particle)}</span>`;}).join('');
+ layer.querySelector('.celebration-particles').innerHTML=Array.from({length:late?8:grand?64:30},(_,i)=>{const a=(i/(late?8:grand?64:30))*Math.PI*2,d=120+random()*300,colors=['#d8b35b','#a0b67e','#b19bc5','#d59678','#7ca6a1'];return `<span class="particle" style="--x:${Math.cos(a)*d}px;--y:${Math.sin(a)*d}px;--r:${180+random()*540}deg;--size:${24+random()*30}px;--color:${colors[i%colors.length]};--duration:${1.5+random()*1.3}s;--delay:${random()*.4}s">${iconMarkup(particle)}</span>`;}).join('');
  layer.hidden=false;
 }
 function dismissCelebration(){$('celebration').hidden=true;replaceChildren($('celebration').querySelector('.celebration-particles'));}
@@ -499,7 +529,7 @@ $('discard-settings').addEventListener('click',()=>{dismissCelebration();closeSe
 $('settings-form').addEventListener('submit',event=>event.preventDefault());
 $('add-kid').addEventListener('click',()=>{const child={id:id('child'),name:'',color:R.KID_COLORS[$('kids-editor').children.length%R.KID_COLORS.length]};$('kids-editor').append(kidRow(child,$('kids-editor').children.length));refreshAssignments();$('add-kid').disabled=$('kids-editor').children.length>=8;$('kids-editor').lastChild.querySelector('.kid-name-input').focus();});
 $('add-chore').addEventListener('click',()=>{const rows=[...$('chore-editor').children],last=rows.length?rows[rows.length-1].querySelector('.edit-end').value:'18:00';let start=R.minutes(last);if(!Number.isFinite(start)||start>=1439)start=1080;const row=editorRow({id:id('chore'),title:'',icon:'⭐',start:timeString(start),end:timeString(Math.min(start+15,1439)),kidIds:currentKids().map(k=>k.id)});$('chore-editor').append(row);updateAddButton();row.querySelector('.edit-title').focus();});
-$('preview-celebration').addEventListener('click',()=>celebrate(false));
+$('preview-celebration').addEventListener('click',()=>celebrate());
 $('export-settings').addEventListener('click',()=>{try{const value=readEditor(),url=URL.createObjectURL(new Blob([JSON.stringify(value,null,2)],{type:'application/json'})),a=document.createElement('a');a.href=url;a.download='evening-garden-routine.json';a.hidden=true;document.body.appendChild(a);a.click();setTimeout(()=>{a.remove();URL.revokeObjectURL(url);},1000);}catch(error){settingsError(error);}});
 $('import-settings').addEventListener('click',()=>$('import-file').click());
 $('import-file').addEventListener('change',async event=>{const file=event.target.files[0];if(!file)return;try{if(file.size>100000)throw Error('Choose a routine file smaller than 100 KB.');populateEditor(R.validate(JSON.parse(await readFile(file))));notify('Loaded. Close Settings to save.');}catch(error){settingsError(new Error(error instanceof SyntaxError?'Invalid JSON file.':error.message));}finally{event.target.value='';}});

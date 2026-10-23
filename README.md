@@ -63,7 +63,7 @@ The optional service worker provides offline reloads on supported secure origins
 - `build.py`: regenerate the standalone HTML after editing the app.
 - `test.cjs`: automated tests of timing boundaries, validation, reload cleanup, and midnight reset. Run `node test.cjs` with Node 18 or newer. Node is only needed for these tests, not to run the app.
 
-The revised app has 38 automated tests for child-specific progress, assignment cleanup, timing, compressed-scale continuity, readable slot heights, cross-child alignment, range-sector geometry, validation, and migration. Browser checks verified custom color selection, color persistence and discard, late turtle reminders, regular celebrations, quiet undo, one shared row/title/range clock per chore, individual checkbox persistence and undo, assignment dashes, compact supper rows, preserved settings, and tablet column alignment. Earlier checks covered child addition/removal, selective assignment, independent completion, and reload persistence.
+The revised app has 47 automated tests for child-specific progress, assignment cleanup, timing, compressed-scale continuity, readable slot heights, cross-child alignment, range-sector geometry, validation, and migration. Browser checks verified custom color selection, color persistence and discard, late turtle reminders, regular celebrations, quiet undo, one shared row/title/range clock per chore, individual checkbox persistence and undo, assignment dashes, compact supper rows, preserved settings, and tablet column alignment. Earlier checks covered child addition/removal, selective assignment, independent completion, and reload persistence.
 
 ## Icons and licensing
 
@@ -84,3 +84,9 @@ At the top of Settings, use **Shift today’s times**. Choose +5, +10, +15, or +
 The same offset applies to every future chore and every chore that any assigned child has not finished, including overdue and currently active chores. Completed past chores stay in place. Future chores move even if completed early. Both start and end move, preserving durations and gaps between shifted chores. Completed history can overlap shifted rows.
 
 The timeline, range clocks, countdown, Now button, and celebrations use today’s adjusted times. The shift and Undo survive a reload, but expire at local midnight along with daily progress. The regular schedule and its JSON backup exclude today’s adjustments. A shift crossing a day boundary is rejected with an explanation.
+
+## The same celebration all day
+
+Each child’s chore checkbox receives a randomly selected celebration on its first completion of the local day. Unchecking and checking it again replays the same picture, message, and animation, even after reloading. Choices are independent for each child and chore. At midnight they are cleared, and the next day draws fresh choices on first completion. A random draw can occasionally pick the same theme again.
+
+The first earned outcome is preserved: an on-time celebration does not become a turtle when replayed after the deadline, a late completion keeps its turtle message, and an earned final celebration can also be replayed. Settings previews remain random and do not change any checkbox’s selection. Shifting today’s times or undoing a shift also preserves these choices.

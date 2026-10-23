@@ -152,3 +152,57 @@ test('celebration lateness uses the shifted deadline',()=>{
  const c=R.defaults(),d=new Date(2026,9,23,18,50),shift=R.shiftRemaining(c,R.freshProgress(d),15,d),chore=R.effectiveConfig(c,shift.progress,d).chores.find(ch=>ch.id==='supper');
  assert.equal(R.isLate(c.chores[0],R.timeOfDay(d)),true);assert.equal(R.isLate(chore,R.timeOfDay(d)),false);
 });
+
+test('each checkbox replays its first daily reward without drawing again',()=>{
+ const c=R.defaults(),d=new Date(2026,9,23,19),p=R.freshProgress(d),key=R.completionKey('child-1','supper');let draws=0;
+ p.done[key]={at:d.toISOString()};const draw=()=>{draws++;return .1;},first=R.assignCelebration(c,p,'child-1','supper',{late:false,grand:false,everyone:false},d,draw);
+ assert.equal(draws,3);assert.equal(p.celebrations,undefined);delete first.progress.done[key];
+ const undone=R.cleanProgress(first.progress,c,d);assert.deepEqual(undone.celebrations[key],first.celebration);
+ undone.done[key]={at:d.toISOString()};const replay=R.assignCelebration(c,undone,'child-1','supper',{late:true,grand:true,everyone:true},d,draw);
+ assert.equal(draws,3);assert.deepEqual(replay.celebration,first.celebration);assert.equal(replay.celebration.late,false);
+});
+test('celebrations belong to individual children and chores',()=>{
+ const c=R.defaults(),d=new Date(2026,9,23,19),first=R.assignCelebration(c,R.freshProgress(d),'child-1','supper',{},d,()=>.1);
+ const otherChild=R.assignCelebration(c,first.progress,'child-2','supper',{},d,()=>.8);
+ const otherChore=R.assignCelebration(c,otherChild.progress,'child-1','pajamas',{},d,()=>.5);
+ assert.equal(Object.keys(otherChore.progress.celebrations).length,3);assert.equal(first.celebration.theme,2);assert.equal(otherChild.celebration.theme,16);assert.equal(otherChore.celebration.theme,10);
+ assert.throws(()=>R.assignCelebration(c,first.progress,'missing','supper',{},d));
+});
+test('unchecking and reloading retain the daily celebration',()=>{
+ const c=R.defaults(),d=new Date(2026,9,23,19),first=R.assignCelebration(c,R.freshProgress(d),'child-1','supper',{},d,()=>.3),key=R.completionKey('child-1','supper');
+ const reload=R.cleanProgress(JSON.parse(JSON.stringify(first.progress)),c,d);assert.equal(reload.done[key],undefined);assert.deepEqual(reload.celebrations[key],first.celebration);
+ const replay=R.assignCelebration(c,reload,'child-1','supper',{},d,()=>{throw Error('Should not randomize on reload');});assert.deepEqual(replay.celebration,first.celebration);
+});
+test('new local dates clear rewards and draw fresh daily celebrations',()=>{
+ const c=R.defaults(),d=new Date(2026,9,23,19),first=R.assignCelebration(c,R.freshProgress(d),'child-1','supper',{},d,()=>.1),tomorrow=new Date(2026,9,24,18);
+ assert.equal(R.cleanProgress(first.progress,c,tomorrow).celebrations,undefined);
+ const next=R.assignCelebration(c,first.progress,'child-1','supper',{},tomorrow,()=>.8);assert.equal(next.progress.day,R.dayKey(tomorrow));assert.equal(next.celebration.theme,16);assert.notDeepEqual(next.celebration,first.celebration);
+});
+test('late reminders and earned completion celebrations also replay their original choice',()=>{
+ const c=R.defaults(),d=new Date(2026,9,23,21),first=R.assignCelebration(c,R.freshProgress(d),'child-1','supper',{late:true,grand:true,everyone:true},d,()=>.7);
+ const replay=R.assignCelebration(c,first.progress,'child-1','supper',{late:false,grand:false,everyone:false},d,()=>.1);
+ assert.deepEqual(replay.celebration,first.celebration);assert.equal(replay.celebration.reminder,4);assert.equal(replay.celebration.grand,true);assert.equal(replay.celebration.everyone,true);assert.equal(replay.celebration.late,true);
+});
+test('shifts, undo and settings cleanup preserve assigned daily celebrations',()=>{
+ const c=R.defaults(),d=new Date(2026,9,23,19),first=R.assignCelebration(c,R.freshProgress(d),'child-1','supper',{},d,()=>.4),key=R.completionKey('child-1','supper');
+ const shifted=R.shiftRemaining(c,first.progress,15,d),undo=R.undoShift(c,shifted.progress,d);
+ assert.deepEqual(shifted.progress.celebrations[key],first.celebration);assert.deepEqual(undo.celebrations[key],first.celebration);
+ c.kids[0].name='New name';assert.deepEqual(R.cleanProgress(undo,c,d).celebrations[key],first.celebration);
+});
+test('reward cleanup removes malformed and unassigned choices without removing valid ones',()=>{
+ const c=R.defaults(),d=new Date(2026,9,23,19),first=R.assignCelebration(c,R.freshProgress(d),'child-1','supper',{},d,()=>.2),p=first.progress;
+ p.celebrations['child-2:supper']={...first.celebration,theme:R.CELEBRATION_COUNT};p.celebrations['child-1:pajamas']={...first.celebration,seed:-1};p.celebrations['child-2:pajamas']={...first.celebration,late:'false'};p.celebrations['child-1:deleted']=first.celebration;
+ const clean=R.cleanProgress(p,c,d);assert.deepEqual(Object.keys(clean.celebrations),['child-1:supper']);
+ c.chores[0].kidIds=['child-2'];assert.equal(R.cleanProgress(clean,c,d).celebrations,undefined);
+});
+test('particle animation randomness is repeatable from a saved reward seed',()=>{
+ const a=R.celebrationRandom(12345),b=R.celebrationRandom(12345),c=R.celebrationRandom(54321);
+ const first=Array.from({length:100},()=>a()),replay=Array.from({length:100},()=>b()),other=Array.from({length:100},()=>c());
+ assert.deepEqual(first,replay);assert.notDeepEqual(first,other);assert.ok(first.every(v=>v>=0&&v<1));
+});
+test('reward choice limits match the bundled theme and reminder lists',()=>{
+ const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),source=fs.readFileSync(path.join(__dirname,'app.js'),'utf8');
+ const lists=source.slice(source.indexOf('const celebrationThemes='),source.indexOf('function celebrate('));
+ const counts=vm.runInNewContext(lists+';({themes:celebrationThemes.length,reminders:lateReminders.length})');
+ assert.equal(counts.themes,R.CELEBRATION_COUNT);assert.equal(counts.reminders,R.LATE_REMINDER_COUNT);
+});
