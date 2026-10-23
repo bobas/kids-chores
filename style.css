@@ -65,3 +65,17 @@ button:focus,input:focus,select:focus,#schedule-scroll:focus{outline:3px solid #
 .icon-credits{font-size:13px;color:#637168;line-height:1.5}
 .icon-credits a{color:inherit}
 .child-check:checked:after{content:'';width:14px;height:27px;border:solid currentColor;border-width:0 5px 5px 0;transform:rotate(45deg);margin-top:-6px}
+
+/* Give celebrations a readable, generous size on shared tablets. */
+.celebration button,.celebration.late button{width:76vw;max-width:1040px;min-height:320px;max-height:90vh;overflow-y:auto;padding:40px 48px;gap:18px}
+.celebration button>span:first-child,.celebration.late button>span:first-child{font-size:104px}
+.celebration strong,.celebration.late strong{max-width:100%;font-size:42px;line-height:1.25;overflow-wrap:break-word}
+.celebration #celebration-subtitle,.celebration.late #celebration-subtitle{max-width:100%;font-size:24px;line-height:1.35;overflow-wrap:break-word}
+.celebration small{font-size:15px}
+@media(max-width:700px){
+ .celebration button,.celebration.late button{width:92vw;min-height:260px;padding:28px 22px;gap:14px}
+ .celebration button>span:first-child,.celebration.late button>span:first-child{font-size:84px}
+ .celebration strong,.celebration.late strong{font-size:32px}
+ .celebration #celebration-subtitle,.celebration.late #celebration-subtitle{font-size:21px}
+ .celebration small{font-size:14px}
+}

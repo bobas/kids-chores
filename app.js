@@ -167,12 +167,12 @@ function celebrate(grand=false, childName='', everyone=false, late=false) {
  clearTimeout(toastTimer);$('toast').hidden=true;let index;
  do{index=Math.floor(Math.random()*celebrationThemes.length);}while(index===lastCelebration);lastCelebration=index;
  const [icon,title,subtitle,particle,motion]=late?['🐢','','','🍃','float']:grand?['🏆','You did every little step!','Big hugs. Sweet dreams. See you tomorrow!','✦','rain']:celebrationThemes[index];
- const layer=$('celebration');($('settings-dialog').open ? $('settings-dialog') : document.body).append(layer);layer.classList.toggle('grand',grand);layer.classList.toggle('late',late);layer.dataset.motion=motion;
+ const layer=$('celebration');(nativeDialog&&settings.open ? settings : document.body).append(layer);layer.classList.toggle('grand',grand);layer.classList.toggle('late',late);layer.dataset.motion=motion;
  $('celebration-icon').innerHTML=iconMarkup(icon);
  let reminder='';if(late){let next;do{next=Math.floor(Math.random()*lateReminders.length);}while(next===lastReminder);lastReminder=next;reminder=lateReminders[next];}
  $('celebration-title').textContent=late?reminder:everyone?'Everyone: all done!':grand&&childName?`${childName}: all done!`:title;
  $('celebration-subtitle').textContent=late?(everyone?'Everyone: all done!':grand?`${childName}: all done!`:`${childName}, you finished!`):childName&&!grand?childName:'';
- layer.querySelector('.celebration-particles').innerHTML=Array.from({length:late?8:grand?64:30},(_,i)=>{const a=(i/(late?8:grand?64:30))*Math.PI*2,d=120+Math.random()*300,colors=['#d8b35b','#a0b67e','#b19bc5','#d59678','#7ca6a1'];return `<span class="particle" style="--x:${Math.cos(a)*d}px;--y:${Math.sin(a)*d}px;--r:${180+Math.random()*540}deg;--size:${12+Math.random()*21}px;--color:${colors[i%colors.length]};--duration:${1.5+Math.random()*1.3}s;--delay:${Math.random()*.4}s">${iconMarkup(particle)}</span>`;}).join('');
+ layer.querySelector('.celebration-particles').innerHTML=Array.from({length:late?8:grand?64:30},(_,i)=>{const a=(i/(late?8:grand?64:30))*Math.PI*2,d=120+Math.random()*300,colors=['#d8b35b','#a0b67e','#b19bc5','#d59678','#7ca6a1'];return `<span class="particle" style="--x:${Math.cos(a)*d}px;--y:${Math.sin(a)*d}px;--r:${180+Math.random()*540}deg;--size:${24+Math.random()*30}px;--color:${colors[i%colors.length]};--duration:${1.5+Math.random()*1.3}s;--delay:${Math.random()*.4}s">${iconMarkup(particle)}</span>`;}).join('');
  layer.hidden=false;
 }
 function dismissCelebration(){$('celebration').hidden=true;replaceChildren($('celebration').querySelector('.celebration-particles'));}
