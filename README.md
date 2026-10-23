@@ -63,8 +63,16 @@ The optional service worker provides offline reloads on supported secure origins
 - `build.py`: regenerate the standalone HTML after editing the app.
 - `test.cjs`: automated tests of timing boundaries, validation, reload cleanup, and midnight reset. Run `node test.cjs` with Node 18 or newer. Node is only needed for these tests, not to run the app.
 
-The revised app has 22 automated tests for child-specific progress, assignment cleanup, timing, compressed-scale continuity, readable slot heights, cross-child alignment, range-sector geometry, validation, and migration. Browser checks verified custom color selection, color persistence and discard, late turtle reminders, regular celebrations, quiet undo, one shared row/title/range clock per chore, individual checkbox persistence and undo, assignment dashes, compact supper rows, preserved settings, and tablet column alignment. Earlier checks covered child addition/removal, selective assignment, independent completion, and reload persistence.
+The revised app has 29 automated tests for child-specific progress, assignment cleanup, timing, compressed-scale continuity, readable slot heights, cross-child alignment, range-sector geometry, validation, and migration. Browser checks verified custom color selection, color persistence and discard, late turtle reminders, regular celebrations, quiet undo, one shared row/title/range clock per chore, individual checkbox persistence and undo, assignment dashes, compact supper rows, preserved settings, and tablet column alignment. Earlier checks covered child addition/removal, selective assignment, independent completion, and reload persistence.
 
 ## Icons and licensing
 
 [Twemoji 15.1.0](https://github.com/jdecked/twemoji/tree/7407fa31c51be5ab45626b8ab5554d50cc8073f6) graphics by Twitter, Inc. and other contributors are licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). See `LICENSE-TWEMOJI.txt` for the full license. The 38 selected SVG graphics are embedded in `ICON_ART` in `app.js`, so the standalone HTML works offline and the existing server needs no restart. Artwork is unchanged; rendering adds styling and accessibility attributes to the SVG root. The app draws geometric particles and controls as vectors. No Twemoji JavaScript or network image requests are used.
+
+## Keep the screen awake in fullscreen
+
+The fullscreen button also enables keep-awake. Leaving fullscreen or hiding the page releases it; returning to a still-fullscreen page tries to reacquire it. A green button border indicates active keep-awake. If the browser refuses or interrupts it, a message appears and the next tap on the page retries.
+
+Supporting browsers use the Screen Wake Lock API. Firefox 68 and local HTTP access use bundled silent video adapted from [NoSleep.js 0.12.0](https://github.com/richtr/NoSleep.js/tree/07fcee254724ab1b79076fbc22f3dd447649a2eb). The video needs no network requests and is included in the standalone HTML. The samples and fallback technique are MIT licensed (Rich Tibbett); the license is in `LICENSE-NOSLEEP.txt` and the embedded app source.
+
+Actual screen-sleep prevention also depends on the browser, operating system, and power-saving settings. On the tablet, check that fullscreen keeps the display on beyond its normal timeout and that exiting allows it to sleep normally again. Manually locking the device still locks the screen.

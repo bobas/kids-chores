@@ -79,3 +79,6 @@ button:focus,input:focus,select:focus,#schedule-scroll:focus{outline:3px solid #
  .celebration #celebration-subtitle,.celebration.late #celebration-subtitle{font-size:21px}
  .celebration small{font-size:14px}
 }
+
+#fullscreen[data-awake="active"]{border-color:#688a51;box-shadow:inset 0 0 0 1px #688a51}
+#fullscreen[data-awake="failed"]{border-color:#b96140}

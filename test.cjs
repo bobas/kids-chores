@@ -52,3 +52,52 @@ test('all chore and celebration icons have bundled graphics without fonts or ext
  for(const icon of R.ICONS){assert.ok(icons.art[icon],icon);assert.ok(icons.labels[icon],icon);const config=R.defaults();config.chores[0].icon=icon;assert.equal(R.validate(JSON.parse(JSON.stringify(config))).chores[0].icon,icon);}
  assert.equal(icons.markup('<img src=x onerror=alert(1)>'),icons.markup('⭐'));
 });
+
+function awakeHarness(request,play){
+ const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),source=fs.readFileSync(path.join(__dirname,'app.js'),'utf8');
+ const section=source.slice(source.indexOf('// BEGIN SCREEN AWAKE'),source.indexOf('// END SCREEN AWAKE'));
+ const states=[],videos=[],document={hidden:false,body:{appendChild(){}},createElement(tag){
+  if(tag!=='video')return {};
+  const listeners={},video={paused:true,style:{},children:[],setAttribute(){},appendChild(child){this.children.push(child);},addEventListener(name,fn){listeners[name]=fn;},play(){this.paused=false;return play?play():Promise.resolve();},pause(){this.paused=true;if(listeners.pause)listeners.pause();}};
+  videos.push(video);return video;
+ }};
+ const navigator=request?{wakeLock:{request}}:{};
+ const factory=vm.runInNewContext(section+';createScreenAwake',{document,navigator});
+ return {controller:factory(state=>states.push(state)),document,states,videos};
+}
+function wakeSentinel(){
+ let onRelease;
+ return {released:false,addEventListener(name,fn){if(name==='release')onRelease=fn;},release(){this.released=true;if(onRelease)onRelease();return Promise.resolve();}};
+}
+test('fullscreen wake lock is deduplicated and released when stopped or hidden',async()=>{
+ const locks=[],h=awakeHarness(()=>{const lock=wakeSentinel();locks.push(lock);return Promise.resolve(lock);});
+ await Promise.all([h.controller.enable(),h.controller.enable()]);assert.equal(locks.length,1);assert.equal(h.states.at(-1),'active');
+ h.document.hidden=true;await h.controller.sync();assert.equal(locks[0].released,true);assert.equal(h.states.at(-1),'paused');
+ h.document.hidden=false;await h.controller.sync();assert.equal(locks.length,2);h.controller.disable();assert.equal(locks[1].released,true);assert.equal(h.states.at(-1),'off');
+});
+test('late native wake-lock results are released after leaving fullscreen',async()=>{
+ let finish;const lock=wakeSentinel(),h=awakeHarness(()=>new Promise(resolve=>{finish=resolve;}));
+ const enabling=h.controller.enable();h.controller.disable();finish(lock);assert.equal(await enabling,false);assert.equal(lock.released,true);assert.equal(h.states.at(-1),'off');assert.equal(h.videos.length,0);
+});
+test('a system-revoked wake lock reports failure and can be retried without a loop',async()=>{
+ const locks=[],h=awakeHarness(()=>{const lock=wakeSentinel();locks.push(lock);return Promise.resolve(lock);});
+ await h.controller.enable();await locks[0].release();assert.equal(h.states.at(-1),'failed');assert.equal(locks.length,1);
+ await h.controller.enable();assert.equal(locks.length,2);assert.equal(h.states.at(-1),'active');h.controller.disable();
+});
+test('older browsers use one muted bundled video and pause it outside fullscreen',async()=>{
+ const h=awakeHarness();await h.controller.enable();assert.equal(h.videos.length,1);assert.equal(h.videos[0].muted,true);assert.equal(h.states.at(-1),'active');
+ assert.equal(h.videos[0].children.length,2);assert.ok(h.videos[0].children.every(s=>s.src.startsWith('data:video/')));
+ h.controller.disable();assert.equal(h.videos[0].paused,true);assert.equal(h.states.at(-1),'off');
+ await h.controller.enable();assert.equal(h.videos.length,1);h.document.hidden=true;await h.controller.sync();assert.equal(h.videos[0].paused,true);assert.equal(h.states.at(-1),'paused');
+ h.document.hidden=false;await h.controller.sync();assert.equal(h.videos[0].paused,false);h.controller.disable();
+});
+test('native refusal falls back to the bundled video',async()=>{
+ const h=awakeHarness(()=>Promise.reject(Error('Unavailable')));assert.equal(await h.controller.enable(),true);assert.equal(h.videos.length,1);assert.equal(h.states.at(-1),'active');h.controller.disable();
+});
+test('blocked video playback reports failure rather than claiming a wake lock',async()=>{
+ const h=awakeHarness(null,()=>Promise.reject(Error('Playback blocked')));assert.equal(await h.controller.enable(),false);assert.equal(h.states.at(-1),'failed');h.controller.disable();assert.equal(h.states.at(-1),'off');
+});
+test('backgrounding during video startup cannot reactivate keep-awake',async()=>{
+ let finish;const h=awakeHarness(null,()=>new Promise(resolve=>{finish=resolve;})),enabling=h.controller.enable();
+ h.document.hidden=true;await h.controller.sync();finish();assert.equal(await enabling,false);assert.equal(h.states.at(-1),'paused');assert.equal(h.videos[0].paused,true);h.controller.disable();
+});
