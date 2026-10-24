@@ -71,24 +71,28 @@ function uiIcon(name){
 // Keep browser-facing code compatible with Firefox 68 (Android 4.4).
 function replaceChildren(parent,children=[]){parent.textContent='';children.forEach(child=>parent.appendChild(child));}
 function readFile(file){return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=()=>reject(new Error('Could not read the file.'));reader.readAsText(file);});}
-const settings=$('settings-dialog'),nativeDialog=typeof settings.showModal==='function';
-if(!nativeDialog)settings.classList.add('dialog-fallback');
-function openSettings(){
- populateEditor(config);
- if(nativeDialog)settings.showModal();
- else{settings.open=true;settings.setAttribute('open','');settings.setAttribute('aria-modal','true');$('settings-backdrop').hidden=false;document.body.classList.add('settings-modal-open');document.querySelector('.topbar').setAttribute('aria-hidden','true');document.querySelector('main').setAttribute('aria-hidden','true');settings.querySelector('.close-dialog').focus();}
+const settings=$('settings-dialog'),shiftDialog=$('shift-dialog'),nativeDialog=typeof settings.showModal==='function';
+if(!nativeDialog)for(const dialog of [settings,shiftDialog])dialog.classList.add('dialog-fallback');
+function showDialog(dialog){
+ if(nativeDialog)dialog.showModal();
+ else{dialog.open=true;dialog.setAttribute('open','');dialog.setAttribute('aria-modal','true');$('settings-backdrop').hidden=false;document.body.classList.add('settings-modal-open');document.querySelector('.topbar').setAttribute('aria-hidden','true');document.querySelector('main').setAttribute('aria-hidden','true');dialog.querySelector('.close-dialog').focus();}
 }
-function closeSettings(){
- if(nativeDialog)settings.close();
- else{settings.open=false;settings.removeAttribute('open');settings.removeAttribute('aria-modal');$('settings-backdrop').hidden=true;document.body.classList.remove('settings-modal-open');document.querySelector('.topbar').removeAttribute('aria-hidden');document.querySelector('main').removeAttribute('aria-hidden');$('settings-open').focus();}
+function hideDialog(dialog,opener){
+ if(nativeDialog)dialog.close();
+ else{dialog.open=false;dialog.removeAttribute('open');dialog.removeAttribute('aria-modal');$('settings-backdrop').hidden=true;document.body.classList.remove('settings-modal-open');document.querySelector('.topbar').removeAttribute('aria-hidden');document.querySelector('main').removeAttribute('aria-hidden');}
+ $(opener).focus();
 }
-// The fallback blocks the page behind settings and keeps keyboard focus inside.
-$('settings-backdrop').addEventListener('click',saveAndCloseSettings);
+function openSettings(){populateEditor(config);showDialog(settings);}
+function closeSettings(){hideDialog(settings,'settings-open');}
+function closeShift(){hideDialog(shiftDialog,'shift-open');}
+function closeActiveDialog(){if(shiftDialog.open)closeShift();else if(settings.open)saveAndCloseSettings();}
+$('settings-backdrop').addEventListener('click',closeActiveDialog);
 document.addEventListener('keydown',event=>{
- if(nativeDialog||!settings.open||event.defaultPrevented||!$('celebration').hidden)return;
- if(event.key==='Escape'){event.preventDefault();saveAndCloseSettings();}
+ const dialog=shiftDialog.open?shiftDialog:settings.open?settings:null;
+ if(nativeDialog||!dialog||event.defaultPrevented||!$('celebration').hidden)return;
+ if(event.key==='Escape'){event.preventDefault();closeActiveDialog();}
  else if(event.key==='Tab'){
-  const controls=[...settings.querySelectorAll('button,input,select,[tabindex]')].filter(el=>!el.disabled&&el.tabIndex>=0&&el.getClientRects().length);
+  const controls=[...dialog.querySelectorAll('button,input,select,[tabindex]')].filter(el=>!el.disabled&&el.tabIndex>=0&&el.getClientRects().length);
   const first=controls[0],last=controls[controls.length-1];
   if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}
   else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}
@@ -142,7 +146,7 @@ function tick(force=false){
  const date=new Date(),now=R.timeOfDay(date),day=R.dayKey(date);if(progress.day!==day){progress=R.freshProgress(date);save();force=true;}
  todayConfig=R.effectiveConfig(config,progress,date);
  const time=timeString(now);$('digital-time').innerHTML=digits(time);const clock=$('main-clock');if(!clock.firstChild)clock.innerHTML=clockSvg(date.getHours(),date.getMinutes());clock.setAttribute('role','img');clock.setAttribute('aria-label',`Current time ${formatTime(time)}`);clock.querySelector('.hour-hand').setAttribute('transform',`rotate(${date.getHours()%12*30+date.getMinutes()*.5+date.getSeconds()/120} 100 100)`);clock.querySelector('.minute-hand').setAttribute('transform',`rotate(${date.getMinutes()*6+date.getSeconds()*.1} 100 100)`);
- const stamp=`${day}-${time}`;if(force||stamp!==renderStamp){render(now);renderStamp=stamp;if(settings.open)refreshShiftPreview();}updateNow(now);
+ const stamp=`${day}-${time}`;if(force||stamp!==renderStamp){render(now);renderStamp=stamp;if(shiftDialog.open)refreshShiftPreview();}updateNow(now);
  const active=todayConfig.chores.some(c=>R.onTime(c,now)&&c.kidIds.some(k=>!done(k,c.id))),next=todayConfig.chores.find(c=>R.minutes(c.start)>now&&c.kidIds.some(k=>!done(k,c.id))),left=next?Math.ceil(R.minutes(next.start)-now):0;$('starts-in').textContent=!active&&next?`${formatTime(next.start)} · ${left>=60?`${Math.floor(left/60)}h `:''}${left%60}m`:'';
 }
 function jumpNow(){if(!layout)return;const now=R.timeOfDay(new Date()),target=(now<layout.start?R.minutes(todayConfig.chores[0].start):(now>layout.end?R.minutes(todayConfig.chores[todayConfig.chores.length-1].start):now));$('schedule-scroll').scrollTo({top:Math.max(0,R.position(layout,target)-90),behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});}
@@ -196,7 +200,7 @@ function assignmentMarkup(ids){return '<legend>Children</legend>'+currentKids().
 function refreshAssignments(){for(const field of document.querySelectorAll('.assignments')){const checked=[...field.querySelectorAll('input:checked')].map(i=>i.value);field.innerHTML=assignmentMarkup(checked);}}
 function editorRow(chore){const row=document.createElement('div');row.className='editor-row';row.dataset.id=chore.id;row.innerHTML=`<div class="edit-main"><label>Icon<span class="icon-picker"><span class="icon-preview" aria-hidden="true">${iconMarkup(chore.icon)}${uiIcon('caret')}</span><select class="edit-icon" aria-label="Chore icon">${R.ICONS.map(icon=>`<option value="${escape(icon)}"${chore.icon===icon?' selected':''}>${ICON_LABELS[icon]}</option>`).join('')}</select></span></label><label>Chore<input class="edit-title" maxlength="60" required value="${escape(chore.title)}" placeholder="Story" aria-label="Chore name"></label><label>From<input class="edit-start" type="time" required value="${escape(chore.start)}" aria-label="Start time"></label><label>To<input class="edit-end" type="time" required value="${escape(chore.end)}" aria-label="End time"></label><button type="button" class="delete-chore" aria-label="Remove chore">${uiIcon('close')}</button></div><fieldset class="assignments">${assignmentMarkup(chore.kidIds)}</fieldset>`;row.querySelector('.edit-icon').addEventListener('change',event=>{row.querySelector('.icon-preview').innerHTML=iconMarkup(event.target.value)+uiIcon('caret');});row.querySelector('.delete-chore').addEventListener('click',()=>{row.remove();updateAddButton();});return row;}
 function updateAddButton(){$('add-chore').disabled=$('chore-editor').children.length>=40;}
-function populateEditor(value){$('clock-format').value=value.format;$('celebrations-enabled').checked=value.celebrations;replaceChildren($('kids-editor'),value.kids.map(kidRow));$('add-kid').disabled=value.kids.length>=8;replaceChildren($('chore-editor'),value.chores.map(editorRow));$('settings-error').hidden=true;updateAddButton();$('shift-minutes').value='15';refreshShiftPreview();}
+function populateEditor(value){$('clock-format').value=value.format;$('celebrations-enabled').checked=value.celebrations;replaceChildren($('kids-editor'),value.kids.map(kidRow));$('add-kid').disabled=value.kids.length>=8;replaceChildren($('chore-editor'),value.chores.map(editorRow));$('settings-error').hidden=true;updateAddButton();}
 function readEditor(){return R.validate({version:2,format:$('clock-format').value,celebrations:$('celebrations-enabled').checked,kids:currentKids(),chores:[...$('chore-editor').children].map(row=>({id:row.dataset.id,title:row.querySelector('.edit-title').value,icon:row.querySelector('.edit-icon').value,start:row.querySelector('.edit-start').value,end:row.querySelector('.edit-end').value,kidIds:[...row.querySelectorAll('.assignments input:checked')].map(i=>i.value)}))});}
 function settingsError(error){$('settings-error').textContent=error.message;$('settings-error').hidden=false;$('settings-error').scrollIntoView({block:'nearest',behavior:'smooth'});}
 $('settings-open').addEventListener('click',openSettings);
@@ -212,13 +216,17 @@ function saveAndCloseSettings(){
   finishSettings(updated,R.cleanProgress(progress,updated,date));
  }catch(error){settingsError(error);}
 }
+function finishShift(nextProgress,message){progress=nextProgress;save();tick(true);closeShift();notify(message);jumpNow();}
+$('shift-open').addEventListener('click',()=>{$('shift-minutes').value='15';refreshShiftPreview();showDialog(shiftDialog);});
+$('shift-cancel').addEventListener('click',closeShift);
+for(const event of ['input','change'])$('shift-minutes').addEventListener(event,refreshShiftPreview);
 function refreshShiftPreview(){
  const date=new Date(),undo=$('shift-undo'),preview=$('shift-preview');
  const current=R.cleanProgress(progress,config,date);
  undo.hidden=!Object.prototype.hasOwnProperty.call(current,'undoOffsets');undo.disabled=false;
  $('shift-status').textContent=current.offsets?'Today’s times have been adjusted. The regular schedule for other days is unchanged.':'Applies only today. The regular schedule for other days is unchanged.';
  try{
-  const updated=readEditor();R.effectiveConfig(updated,progress,date);
+  const updated=config;R.effectiveConfig(updated,progress,date);
   const result=R.shiftRemaining(updated,progress,Number($('shift-minutes').value),date);
   preview.classList.remove('error');
   preview.innerHTML='<p>Chores to shift: '+result.changes.length+'</p><ul class="shift-preview-list">'+result.changes.map(ch=>'<li><strong>'+escape(ch.title)+'</strong><span><s>'+escape(formatTime(ch.beforeStart,updated.format))+'–'+escape(formatTime(ch.beforeEnd,updated.format))+'</s> → <b>'+escape(formatTime(ch.start,updated.format))+'–'+escape(formatTime(ch.end,updated.format))+'</b></span></li>').join('')+'</ul>';
@@ -228,23 +236,24 @@ function refreshShiftPreview(){
 for(const button of document.querySelectorAll('[data-shift-minutes]'))button.addEventListener('click',()=>{$('shift-minutes').value=button.dataset.shiftMinutes;refreshShiftPreview();});
 $('shift-apply').addEventListener('click',()=>{
  try{
-  const updated=readEditor(),date=new Date(),offset=Number($('shift-minutes').value);R.effectiveConfig(updated,progress,date);
+  const updated=config,date=new Date(),offset=Number($('shift-minutes').value);R.effectiveConfig(updated,progress,date);
   const result=R.shiftRemaining(updated,progress,offset,date);
-  finishSettings(updated,result.progress,'Today’s times: '+(offset>0?'+':'')+offset+' min.');
- }catch(error){settingsError(error);refreshShiftPreview();}
+  finishShift(result.progress,'Today’s times: '+(offset>0?'+':'')+offset+' min.');
+ }catch(error){refreshShiftPreview();}
 });
 $('shift-undo').addEventListener('click',()=>{
- try{const updated=readEditor();finishSettings(updated,R.undoShift(updated,progress,new Date()),'Last daily shift undone.');}
- catch(error){settingsError(error);}
+ try{finishShift(R.undoShift(config,progress,new Date()),'Last daily shift undone.');}
+ catch(error){const preview=$('shift-preview');preview.classList.add('error');preview.textContent=error.message;}
 });
-for(const event of ['input','change'])$('settings-form').addEventListener(event,refreshShiftPreview);
-$('settings-form').addEventListener('click',()=>{if(settings.open)refreshShiftPreview();});
-for(const button of document.querySelectorAll('.close-dialog'))button.addEventListener('click',saveAndCloseSettings);
-$('settings-dialog').addEventListener('cancel',event=>{event.preventDefault();saveAndCloseSettings();});
-let backdropPressed=false;
-function outsideSettings(event){const r=$('settings-dialog').getBoundingClientRect();return event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom;}
-$('settings-dialog').addEventListener('pointerdown',event=>{backdropPressed=event.target===$('settings-dialog')&&outsideSettings(event);});
-$('settings-dialog').addEventListener('click',event=>{if(backdropPressed&&event.target===$('settings-dialog')&&outsideSettings(event))saveAndCloseSettings();backdropPressed=false;});
+for(const dialog of [settings,shiftDialog]){
+ const close=dialog===settings?saveAndCloseSettings:closeShift;
+ dialog.querySelector('.close-dialog').addEventListener('click',close);
+ dialog.addEventListener('cancel',event=>{event.preventDefault();close();});
+ let backdropPressed=false;
+ const outside=event=>{const r=dialog.getBoundingClientRect();return event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom;};
+ dialog.addEventListener('pointerdown',event=>{backdropPressed=event.target===dialog&&outside(event);});
+ dialog.addEventListener('click',event=>{if(backdropPressed&&event.target===dialog&&outside(event))close();backdropPressed=false;});
+}
 $('discard-settings').addEventListener('click',()=>{dismissCelebration();closeSettings();});
 $('settings-form').addEventListener('submit',event=>event.preventDefault());
 $('add-kid').addEventListener('click',()=>{const child={id:id('child'),name:'',color:R.KID_COLORS[$('kids-editor').children.length%R.KID_COLORS.length]};$('kids-editor').append(kidRow(child,$('kids-editor').children.length));refreshAssignments();$('add-kid').disabled=$('kids-editor').children.length>=8;$('kids-editor').lastChild.querySelector('.kid-name-input').focus();});
