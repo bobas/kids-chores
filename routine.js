@@ -2,7 +2,8 @@
 'use strict';
 const CELEBRATION_COUNT=20,LATE_REMINDER_COUNT=6;
 const KID_COLORS=['#688a51','#9471aa','#b9864d','#5c929a','#aa7080','#7b85b2','#a69a4d','#609578'];
-const ICONS=['🍽️','🧸','🪥','🙏','🚽','🛏️','🛁','📖','👕','🧹','💧','🐶','🎒','⭐','🌙','🧩'];
+const ICON_CATEGORIES=[{"id":"food","icons":["🍽️","🥣","🥄","🥛","🍎","🍌","🥕","🥪","🍞","🍳"]},{"id":"hygiene","icons":["🪥","🚽","🛁","🚿","🧼","🤲","🧴","🧻","🪮","💧"]},{"id":"health","icons":["💊","🩹","🩺","🌡️","💉","🏥","⚕️","🫀","🫁","😷","🩼","🧘"]},{"id":"clothes","icons":["👕","👖","👗","🧦","👟","🧥","🧤","🧢"]},{"id":"tidying","icons":["🧹","🧺","🪣","🗑️","🧽","🧰","🪴","🏠"]},{"id":"school","icons":["🎒","✏️","📝","📚","📖","📐","🖍️","🎨"]},{"id":"pets","icons":["🐶","🐱","🐹","🐰","🐟","🐢","🐦","🐾"]},{"id":"fun","icons":["🧸","🧩","⚽","🚲","🎵","🎲","🎮","🪁","🎻","🏊"]},{"id":"rest","icons":["🛏️","🌙","⭐","🙏","💤","⏰","🛋️","💛"]}];
+const ICONS=ICON_CATEGORIES.reduce((icons,category)=>icons.concat(category.icons),[]);
 const defaults=()=>({version:2,format:'24',celebrations:true,kids:[{id:'child-1',name:'Child 1',color:KID_COLORS[0]},{id:'child-2',name:'Child 2',color:KID_COLORS[1]}],chores:[
 {id:'supper',title:'Supper',icon:'🍽️',start:'18:00',end:'18:45'},
 {id:'pajamas',title:'Pajamas',icon:'🧸',start:'18:50',end:'19:00'},
@@ -150,6 +151,6 @@ function kidTheme(color){
  const luminance=linear[0]*.2126+linear[1]*.7152+linear[2]*.0722;
  return {color,bg,ink:luminance>.179?'#17251d':'#ffffff'};
 }
-const api={CELEBRATION_COUNT,LATE_REMINDER_COUNT,makeCelebration,assignCelebration,celebrationRandom,KID_COLORS,kidTheme,ICONS,defaults,minutes,dayKey,timeOfDay,migrate,validate,completionKey,freshProgress,cleanProgress,effectiveConfig,shiftRemaining,undoShift,onTime,isLate,status,timeline,position,rangeSector};
+const api={CELEBRATION_COUNT,LATE_REMINDER_COUNT,makeCelebration,assignCelebration,celebrationRandom,KID_COLORS,kidTheme,ICON_CATEGORIES,ICONS,defaults,minutes,dayKey,timeOfDay,migrate,validate,completionKey,freshProgress,cleanProgress,effectiveConfig,shiftRemaining,undoShift,onTime,isLate,status,timeline,position,rangeSector};
 if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.Routine=api;
 })(typeof window!=='undefined'?window:globalThis);

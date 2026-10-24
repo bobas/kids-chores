@@ -67,7 +67,7 @@ The revised app has 47 automated tests for child-specific progress, assignment c
 
 ## Icons and licensing
 
-[Twemoji 15.1.0](https://github.com/jdecked/twemoji/tree/7407fa31c51be5ab45626b8ab5554d50cc8073f6) graphics by Twitter, Inc. and other contributors are licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). See `LICENSE-TWEMOJI.txt` for the full license. The 38 selected SVG graphics are embedded in `ICON_ART` in `app.js`, so the standalone HTML works offline and the existing server needs no restart. Artwork is unchanged; rendering adds styling and accessibility attributes to the SVG root. The app draws geometric particles and controls as vectors. No Twemoji JavaScript or network image requests are used.
+[Twemoji 15.1.0](https://github.com/jdecked/twemoji/tree/7407fa31c51be5ab45626b8ab5554d50cc8073f6) graphics by Twitter, Inc. and other contributors are licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). See `LICENSE-TWEMOJI.txt` for the full license. The 101 selected SVG graphics are embedded in `ICON_ART` in `app.js`, so the standalone HTML works offline and the existing server needs no restart. Artwork is unchanged; rendering adds styling and accessibility attributes to the SVG root. The app draws geometric particles and controls as vectors. No Twemoji JavaScript or network image requests are used.
 
 ## Keep the screen awake in fullscreen
 
@@ -90,3 +90,9 @@ The timeline, range clocks, countdown, Now button, and celebrations use today’
 Each child’s chore checkbox receives a randomly selected celebration on its first completion of the local day. Unchecking and checking it again replays the same picture, message, and animation, even after reloading. Choices are independent for each child and chore. At midnight they are cleared, and the next day draws fresh choices on first completion. A random draw can occasionally pick the same theme again.
 
 The first earned outcome is preserved: an on-time celebration does not become a turtle when replayed after the deadline, a late completion keeps its turtle message, and an earned final celebration can also be replayed. Settings previews remain random and do not change any checkbox’s selection. Shifting today’s times or undoing a shift also preserves these choices.
+
+## Choosing chore icons
+
+In Settings, tap a chore’s picture to open a picker with 82 bundled icons. Browse Food, Hygiene, Health, Clothes, Tidying, School, Pets, Fun, and Rest, or use All to see the full set. The current icon is highlighted. Choosing an icon returns to the settings draft; canceling leaves the selection unchanged. The icon saves with the other settings when Settings closes, and Discard changes restores the original icon. All artwork works offline, in Firefox 68, and in the standalone HTML file.
+
+Health includes medicine, a plaster, a stethoscope, a thermometer, an injection, a hospital, health care, a heart, lungs for breathing, a mask, a crutch, and meditation.
