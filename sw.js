@@ -1,4 +1,4 @@
-const CACHE='evening-garden-v21-reset-shifts';
+const CACHE='evening-garden-v22-completed-highlight';
 const ASSETS=['./','./index.html','./style.css','./routine.js','./app.js','./icon.svg','./manifest.webmanifest'];
 self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(ASSETS)).then(()=>self.skipWaiting()));});
 self.addEventListener('activate',event=>{event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key.startsWith('evening-garden-')&&key!==CACHE).map(key=>caches.delete(key)))).then(()=>self.clients.claim()));});

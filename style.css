@@ -21,7 +21,7 @@
 .shared-chore{min-width:0;border-left:5px solid #8fa87a;border-radius:13px 0 0 13px;display:flex;flex-direction:column}
 .shared-chore-content{position:sticky;top:calc(var(--head) + 8px);display:grid;grid-template-columns:minmax(0,1fr) 165px;gap:10px;align-items:center;min-height:174px;padding:9px 15px;flex:0 0 auto;width:100%}
 .shared-chore .chore-icon{font-size:36px}.shared-chore .chore-title{font-size:29px}
-.routine-row.current{background:#e9f1df;border-color:#789b67}.routine-row.done .shared-chore{background:#e9f1df}
+.routine-row.done .shared-chore{background:#e9f1df}
 .kid-cell{border-left:1px solid #cbd7c1;display:flex;align-items:center;justify-content:center;background:var(--kid-bg)}
 .kid-cell:last-child{border-radius:0 13px 13px 0}.kid-cell.checked{background:var(--kid-bg)}.kid-cell.unassigned{background:#edf0e7}
 .check-target{display:flex;align-items:center;justify-content:center;min-height:88px;width:100%;cursor:pointer}
@@ -30,7 +30,7 @@
 .child-check:hover{box-shadow:0 0 0 5px #ffffff88}.child-check:focus-visible{outline:4px solid #9c76ba;outline-offset:5px}
 .not-assigned{font-size:30px;color:#9aa58e}
 @media(max-width:700px){:root{--chore-width:325px;--child-width:104px}.shared-chore-content{padding:9px 10px;grid-template-columns:minmax(0,1fr) 150px;gap:6px}.shared-chore .chore-title{font-size:27px}.kid-name{font-size:21px}.chore-column-head{font-size:25px}.child-check{width:52px;height:52px}}
-.routine-row{left:0;right:0;grid-template-columns:minmax(var(--chore-width),1fr) repeat(var(--kid-count),var(--child-width));border:0}.shared-chore{margin-left:5px;border:1px solid #c4d0b9;border-right:0;border-left:5px solid #8fa87a}.kid-cell{border-top:1px solid #c4d0b9;border-bottom:1px solid #c4d0b9}.kid-cell:last-child{border-right:1px solid #c4d0b9}.routine-row.current .shared-chore{border-color:#789b67}
+.routine-row{left:0;right:0;grid-template-columns:minmax(var(--chore-width),1fr) repeat(var(--kid-count),var(--child-width));border:0}.shared-chore{margin-left:5px;border:1px solid #c4d0b9;border-right:0;border-left:5px solid #8fa87a}.kid-cell{border-top:1px solid #c4d0b9;border-bottom:1px solid #c4d0b9}.kid-cell:last-child{border-right:1px solid #c4d0b9}
 .settings-save-note{font-size:16px;color:#486c39;background:#e8f0de;border-radius:9px;padding:11px 13px;margin:-9px 0 20px}#discard-settings{color:#8b523c;border-color:#cfb8a9}
 .celebration.late button{background:#f3f7eaff;border-color:#adc69a;max-width:90vw;max-width:min(540px,90vw)}.celebration.late strong{max-width:420px;font-size:28px;line-height:1.3}.celebration.late #celebration-subtitle{font-size:20px;color:#47643b}.celebration.late button>span:first-child{font-size:86px;animation:turtle-waddle 1.1s ease-in-out infinite alternate}@keyframes turtle-waddle{from{transform:translateX(-9px) rotate(-5deg)}to{transform:translateX(9px) rotate(5deg)}}
 /* Let children read at their own pace; a tap anywhere closes the message. */
