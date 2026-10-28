@@ -16,20 +16,15 @@ function minutes(v){return typeof v==='string'&&/^([01]\d|2[0-3]):[0-5]\d$/.test
 function dayKey(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
 function timeOfDay(d){return d.getHours()*60+d.getMinutes()+d.getSeconds()/60;}
 function validId(id){return typeof id==='string'&&/^[a-zA-Z0-9_-]{1,100}$/.test(id);}
-function migrate(value){
- if(!value||value.version!==1)return value;
- const kids=[{id:'child-1',name:'Child 1',color:KID_COLORS[0]},{id:'child-2',name:'Child 2',color:KID_COLORS[1]}];
- return {...value,version:2,kids,chores:Array.isArray(value.chores)?value.chores.map(c=>({...c,kidIds:kids.map(k=>k.id)})):value.chores};
-}
 function validate(input){
- const c=migrate(input);
+ const c=input;
  if(!c||typeof c!=='object'||c.version!==2)throw Error('Choose a valid routine file.');
  if(!['12','24'].includes(c.format)||typeof c.celebrations!=='boolean')throw Error('Choose a clock style and celebration setting.');
  if(!Array.isArray(c.kids)||c.kids.length<1||c.kids.length>8)throw Error('Add between 1 and 8 children.');
  const seen=new Set();
  const kids=c.kids.map((k,i)=>{if(!k||!validId(k.id)||seen.has(k.id))throw Error('Each child needs a unique ID.');seen.add(k.id);if(typeof k.name!=='string'||!k.name.trim()||k.name.length>30)throw Error('Give each child a name (up to 30 letters).');const color=k.color===undefined?KID_COLORS[i%KID_COLORS.length]:k.color;if(typeof color!=='string'||!/^#[0-9a-f]{6}$/i.test(color))throw Error(`Choose a valid color for ${k.name}.`);return {id:k.id,name:k.name.trim(),color:color.toLowerCase()};});
  if(new Set(kids.map(k=>k.name.toLocaleLowerCase())).size!==kids.length)throw Error('Give each child a different name.');
- if(!Array.isArray(c.chores)||!c.chores.length||c.chores.length>40)throw Error('Add between 1 and 40 chores.');
+ if(!Array.isArray(c.chores)||c.chores.length>40)throw Error('Add up to 40 chores.');
  const choreIds=new Set();
  const chores=c.chores.map((chore,i)=>{
  if(!chore||!validId(chore.id)||choreIds.has(chore.id))throw Error('Each chore needs a unique ID.');choreIds.add(chore.id);
@@ -45,10 +40,10 @@ function validate(input){
 }
 function completionKey(kidId,choreId){return `${kidId}:${choreId}`;}
 function freshProgress(date){return {day:dayKey(date),done:Object.create(null)};}
-function cleanProgress(progress,config,date,legacy=false){
+function cleanProgress(progress,config,date){
  const clean=freshProgress(date);
  if(!progress||progress.day!==clean.day||!progress.done||typeof progress.done!=='object')return clean;
- for(const chore of config.chores)for(const kidId of chore.kidIds){const key=completionKey(kidId,chore.id),oldKey=legacy&&kidId===config.kids[0].id?chore.id:key,item=Object.prototype.hasOwnProperty.call(progress.done,oldKey)?progress.done[oldKey]:null;if(item&&typeof item.at==='string'&&Number.isFinite(Date.parse(item.at))&&dayKey(new Date(item.at))===clean.day)clean.done[key]={at:item.at};}
+ for(const chore of config.chores)for(const kidId of chore.kidIds){const key=completionKey(kidId,chore.id),oldKey=key,item=Object.prototype.hasOwnProperty.call(progress.done,oldKey)?progress.done[oldKey]:null;if(item&&typeof item.at==='string'&&Number.isFinite(Date.parse(item.at))&&dayKey(new Date(item.at))===clean.day)clean.done[key]={at:item.at};}
  const celebrations=cleanCelebrations(progress.celebrations,config);if(Object.keys(celebrations).length)clean.celebrations=celebrations;
  const offsets=cleanOffsets(progress.offsets,config);if(Object.keys(offsets).length)clean.offsets=offsets;
  if(Object.prototype.hasOwnProperty.call(progress,'undoOffsets')&&progress.undoOffsets&&typeof progress.undoOffsets==='object'&&!Array.isArray(progress.undoOffsets))clean.undoOffsets=cleanOffsets(progress.undoOffsets,config);
@@ -127,6 +122,7 @@ function status(chore,now,done){return done?'done':now<minutes(chore.start)?'upc
 // Chronological rows share a compressed time axis. Overlapping chores are
 // stacked inside one time block so that every chore still appears just once.
 function timeline(config){
+ if(!config.chores.length)return {start:0,end:1440,segments:[],rows:[],height:0};
  const chores=[...config.chores].sort((a,b)=>minutes(a.start)-minutes(b.start));
  const start=Math.max(0,Math.floor((minutes(chores[0].start)-15)/5)*5),end=Math.min(1440,Math.ceil((Math.max(...chores.map(c=>minutes(c.end)))+5)/5)*5);
  const groups=[];
@@ -137,6 +133,7 @@ function timeline(config){
  addGap(cursor,end);return {start,end,segments,rows,height:y};
 }
 function position(layout,time){
+ if(!layout.segments.length)return 0;
  if(time<=layout.start)return 0;if(time>=layout.end)return layout.height;
  const s=layout.segments.find(s=>time>=s.start&&time<s.end);
  return s.top+(time-s.start)/(s.end-s.start)*s.height;
@@ -155,6 +152,38 @@ function kidTheme(color){
  const luminance=linear[0]*.2126+linear[1]*.7152+linear[2]*.0722;
  return {color,bg,ink:luminance>.179?'#17251d':'#ffffff'};
 }
-const api={CELEBRATION_COUNT,LATE_REMINDER_COUNT,makeCelebration,assignCelebration,celebrationRandom,KID_COLORS,kidTheme,ICON_CATEGORIES,ICONS,defaults,minutes,dayKey,timeOfDay,migrate,validate,completionKey,freshProgress,cleanProgress,effectiveConfig,shiftRemaining,undoShift,resetShifts,onTime,isLate,status,timeline,position,rangeSector};
+const PROFILE_IDS=['morning','forenoon','noon','afternoon','evening'];
+const PROFILE_NAMES={morning:'Morning',forenoon:'Forenoon',noon:'Noon',afternoon:'Afternoon',evening:'Evening'};
+const PROFILE_START={morning:420,forenoon:540,noon:720,afternoon:900,evening:1080};
+function profileConfig(state,id=state.activeProfileId){return {version:2,kids:state.kids,format:state.format,celebrations:state.celebrations,chores:state.profiles[id].chores};}
+function freshState(date=new Date()){
+ const c=defaults(),profiles=Object.create(null);
+ for(const id of PROFILE_IDS)profiles[id]={chores:[],progress:freshProgress(date)};
+ return {version:3,kids:c.kids,format:c.format,celebrations:c.celebrations,activeProfileId:'evening',profiles};
+}
+function validateState(input,date=new Date()){
+ if(!input||input.version!==3||!input.profiles||!PROFILE_IDS.includes(input.activeProfileId))throw Error('Choose a five-profile backup in the new format.');
+ const profiles=Object.create(null);let shared;
+ for(const id of PROFILE_IDS){
+  const entry=input.profiles[id];if(!entry||!Array.isArray(entry.chores))throw Error('The backup is missing a profile: '+PROFILE_NAMES[id]);
+  try{const c=validate({version:2,kids:input.kids,format:input.format,celebrations:input.celebrations,chores:entry.chores});shared=c;profiles[id]={chores:c.chores,progress:cleanProgress(entry.progress,c,date)};}
+  catch(error){throw Error(PROFILE_NAMES[id]+': '+error.message);}
+ }
+ return {version:3,kids:shared.kids,format:shared.format,celebrations:shared.celebrations,activeProfileId:input.activeProfileId,profiles};
+}
+function editProfile(state,config,date=new Date()){
+ const next=JSON.parse(JSON.stringify(state)),ids=config.kids.map(k=>k.id);
+ next.kids=config.kids;next.format=config.format;next.celebrations=config.celebrations;
+ for(const id of PROFILE_IDS)next.profiles[id].chores=id===state.activeProfileId?config.chores:next.profiles[id].chores.map(ch=>({...ch,kidIds:ch.kidIds.filter(k=>ids.includes(k))}));
+ return validateState(next,date);
+}
+function exportState(state){
+ const backup=JSON.parse(JSON.stringify(state));for(const id of PROFILE_IDS)delete backup.profiles[id].progress;return backup;
+}
+function importState(input,date=new Date()){
+ const next=validateState(input,date);for(const id of PROFILE_IDS)next.profiles[id].progress=freshProgress(date);return next;
+}
+
+const api={PROFILE_IDS,PROFILE_NAMES,PROFILE_START,profileConfig,freshState,validateState,editProfile,exportState,importState,CELEBRATION_COUNT,LATE_REMINDER_COUNT,makeCelebration,assignCelebration,celebrationRandom,KID_COLORS,kidTheme,ICON_CATEGORIES,ICONS,defaults,minutes,dayKey,timeOfDay,validate,completionKey,freshProgress,cleanProgress,effectiveConfig,shiftRemaining,undoShift,resetShifts,onTime,isLate,status,timeline,position,rangeSector};
 if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.Routine=api;
 })(typeof window!=='undefined'?window:globalThis);

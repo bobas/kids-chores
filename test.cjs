@@ -14,7 +14,6 @@ test('time mapping is continuous, monotonic, and linear within each segment',()=
 test('long gaps are compressed but remain visible and have correct NOW interpolation',()=>{const c=R.defaults();c.chores.at(-1).start='23:30';c.chores.at(-1).end='23:45';const l=R.timeline(c),gap=l.segments.find(s=>!s.active&&s.end-s.start>180);assert.ok(gap);assert.ok(gap.height<=130&&gap.height>=60);assert.ok(Math.abs(R.position(l,(gap.start+gap.end)/2)-(gap.top+gap.height/2))<1e-8);});
 test('each chore has one row, including overlapping chores for different children',()=>{const c=R.defaults();c.chores[0].kidIds=['child-1'];c.chores.push({id:'extra',title:'Story',icon:'📖',start:'18:10',end:'18:20',kidIds:['child-2']});const l=R.timeline(R.validate(c));assert.equal(l.rows.length,c.chores.length);assert.equal(new Set(l.rows.map(r=>r.id)).size,c.chores.length);for(let i=1;i<l.rows.length;i++)assert.ok(l.rows[i].top>=l.rows[i-1].top+l.rows[i-1].height-1e-8);assert.ok(l.rows.every(r=>r.height>=190));assert.ok(R.position(l,1090)<R.position(l,1100));});
 test('range sector wraps past twelve and handles intervals of one hour or more',()=>{const wrapped=R.rangeSector(18*60+50,19*60+10);assert.equal(wrapped.duration,20);assert.equal(wrapped.startAngle,300);assert.equal(wrapped.endAngle,60);assert.equal(wrapped.full,false);assert.match(wrapped.path,/A82 82 0 0 1/);assert.match(R.rangeSector(1080,1125).path,/A82 82 0 1 1/);assert.equal(R.rangeSector(1080,1140).full,true);assert.equal(R.rangeSector(1080,1155).duration,75);});
-test('legacy settings migrate and shared progress is retained only for first child',()=>{const old={version:1,name:'Our evening',format:'24',celebrations:true,chores:[{id:'supper',title:'Supper',icon:'🍽️',start:'18:00',end:'18:45'}]},c=R.validate(old),d=date(),p={day:R.dayKey(d),done:{supper:{at:d.toISOString()}}};assert.equal(c.version,2);assert.equal(c.chores[0].kidIds.length,2);const clean=R.cleanProgress(p,c,d,true);assert.ok(clean.done['child-1:supper']);assert.equal(clean.done['child-2:supper'],undefined);});
 test('reload strips corrupt timestamps, deleted chores and unknown fields',()=>{const c=R.defaults(),d=date(),p=R.freshProgress(d);p.done['child-1:supper']={at:d.toISOString()};p.done['child-2:supper']={at:'bad'};p.done['child-1:deleted']={at:d.toISOString()};assert.deepEqual(Object.keys(R.cleanProgress(JSON.parse(JSON.stringify(p)),c,d).done),['child-1:supper']);c.extra='drop';assert.equal(R.validate(c).extra,undefined);});
 
 test('turtle reminders apply only after the deadline, never to early or exactly-on-time finishes',()=>{const c=R.defaults().chores[0];assert.equal(R.isLate(c,1000),false);assert.equal(R.isLate(c,1080),false);assert.equal(R.isLate(c,1124.999),false);assert.equal(R.isLate(c,1125),false);assert.equal(R.isLate(c,1125.001),true);assert.equal(R.isLate(c,1200),true);});
@@ -225,4 +224,34 @@ test('reset restores original times after multiple shifts while preserving compl
  assert.deepEqual(R.resetShifts(c,reset,date),reset);
  const newShift=R.shiftRemaining(c,reset,5,date).progress;assert.equal(newShift.offsets.teeth,5);
  assert.equal(R.undoShift(c,newShift,date).offsets,undefined);
+});
+
+test('profiles start empty and reject older storage and backup formats',()=>{
+ const s=R.freshState(date());assert.equal(s.activeProfileId,'evening');
+ assert.equal(R.validateState(s,date()).version,3);
+ for(const id of R.PROFILE_IDS){assert.equal(s.profiles[id].chores.length,0);assert.equal(R.timeline(R.profileConfig(s,id)).height,0);}
+ for(const old of [{config:R.defaults(),progress:R.freshProgress(date())},R.defaults(),{version:1}])assert.throws(()=>R.importState(old));
+});
+test('profiles isolate duplicate chore ids, completion rewards and shifts across reload and midnight',()=>{
+ let s=R.freshState(date());for(const id of ['morning','evening'])s.profiles[id].chores=R.defaults().chores;
+ let c=R.profileConfig(s,'morning'),p=R.freshProgress(date());p.done['child-1:supper']={at:date().toISOString()};
+ p=R.assignCelebration(c,p,'child-1','supper',{},date()).progress;
+ s.profiles.morning.progress=R.shiftRemaining(c,p,10,date()).progress;
+ s=R.validateState(JSON.parse(JSON.stringify(s)),date());assert.equal(s.profiles.morning.progress.offsets.supper,10);
+ assert.equal(s.profiles.evening.progress.done['child-1:supper'],undefined);assert.equal(s.profiles.evening.progress.celebrations,undefined);
+ s=R.validateState(s,new Date(2026,9,17));for(const id of R.PROFILE_IDS){assert.equal(Object.keys(s.profiles[id].progress.done).length,0);assert.equal(s.profiles[id].progress.offsets,undefined);}
+});
+test('shared child edits validate every profile without mutating existing state',()=>{
+ const s=R.freshState(date());s.profiles.morning.chores=[{...R.defaults().chores[0],kidIds:['child-2']}];
+ const c=R.profileConfig(s);c.kids=c.kids.filter(k=>k.id==='child-1');const before=JSON.stringify(s);
+ assert.throws(()=>R.editProfile(s,c,date()),/Morning/);assert.equal(JSON.stringify(s),before);
+ const renamed=R.profileConfig(s);renamed.kids=renamed.kids.map(k=>({...k,name:k.name+' X'}));
+ const next=R.editProfile(s,renamed,date());assert.equal(R.profileConfig(next,'morning').kids[0].name,renamed.kids[0].name);
+});
+test('new backups round-trip every profile without any daily progress',()=>{
+ const s=R.freshState(date());s.profiles.evening.chores=R.defaults().chores;
+ s.profiles.evening.progress=R.shiftRemaining(R.profileConfig(s),R.freshProgress(date()),15,date()).progress;
+ const backup=R.exportState(s);for(const id of R.PROFILE_IDS)assert.equal(backup.profiles[id].progress,undefined);
+ const restored=R.importState(JSON.parse(JSON.stringify(backup)),date());assert.deepEqual(restored.profiles.evening.chores,s.profiles.evening.chores);assert.equal(restored.profiles.evening.progress.offsets,undefined);
+ backup.profiles.evening.progress=s.profiles.evening.progress;assert.equal(R.importState(backup,date()).profiles.evening.progress.offsets,undefined);
 });

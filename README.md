@@ -39,7 +39,7 @@ The optional service worker provides offline reloads on supported secure origins
 ## How it works
 
 - Closing Settings with ×, Escape, or a click outside saves valid edits automatically. **Discard changes** closes without applying the current edits. Invalid names, times, assignments, or overlapping slots keep Settings open with an error so you can fix or discard them.
-- Settings supports 1–8 children and 1–40 chores. Choose each child’s color using the color picker beside their name; it colors their column, checkboxes, and progress bar and is included in backups. Rename, add, or remove children and tick which children each chore belongs to. A new child starts with no assignments; select their chores before saving.
+- Settings supports 1–8 children and 0–40 chores per profile. Choose each child’s color using the color picker beside their name; it colors their column, checkboxes, and progress bar and is included in backups. Rename, add, or remove children and tick which children each chore belongs to. A new child starts with no assignments; select their chores before saving.
 - Each chore appears once in a shared left column, with one shaded range clock. Child names head the checkbox columns on the right. Tick a child's box to complete that chore for them; untick it to undo. Completion counts and progress bars remain individual. Unassigned children show a dash instead of a checkbox. Existing assignments and completion data are preserved.
 - The shared vertical axis uses an adaptive, compressed scale. Row heights grow logarithmically with chore duration, so supper stays compact instead of spanning several screens. Short cards retain enough room for a readable clock. Checkbox columns stay aligned with their shared chore row. Overlapping chores for different children are stacked inside one shared time block; NOW advances across that block. A chore turns light green only when every assigned child has checked it off; its scheduled time alone does not highlight it. Empty gaps stay visible; gaps of 30 minutes or more display their actual duration beside a fold mark. Time labels show the real times. This is deliberately no longer a uniform pixels-per-minute scale.
 - The NOW line updates every second and follows the same compressed mapping as cards and time labels, including through gaps. Child headings remain visible while scrolling. The **Now** button jumps to the current time (or the first/last chore outside the displayed range). Extra columns scroll sideways.
@@ -96,3 +96,17 @@ The first earned outcome is preserved: an on-time celebration does not become a 
 In Settings, tap a chore’s picture to open a picker with 82 bundled icons. Browse Food, Hygiene, Health, Clothes, Tidying, School, Pets, Fun, and Rest, or use All to see the full set. The current icon is highlighted. Choosing an icon returns to the settings draft; canceling leaves the selection unchanged. The icon saves with the other settings when Settings closes, and Discard changes restores the original icon. All artwork works offline, in Firefox 68, and in the standalone HTML file.
 
 Health includes medicine, a plaster, a stethoscope, a thermometer, an injection, a hospital, health care, a heart, lungs for breathing, a mask, a crutch, and meditation.
+
+## Time-of-day profiles
+
+Use the time-of-day toolbar button to select Morning, Forenoon, Noon, Afternoon, or Evening. The selected profile also appears in the Chore heading. Switching is manual and the last selection is remembered. All profiles start empty, with an Add chores in Settings action. New chores in empty profiles start at 07:00, 09:00, 12:00, 15:00, or 18:00, respectively; these are suggestions, not restrictions.
+
+Children, colors, clock format, and the celebrations preference are shared. Each profile has its own chores, assignments, checkmarks, cached celebrations, daily shifts, undo, and reset. Final celebrations count only that profile. Daytime profiles use neutral celebration text; Evening keeps the bedtime wording. Daily progress expires at local midnight, including in inactive profiles.
+
+Settings edits shared children and the selected profile’s chores. Discard changes abandons all pending edits, including imports. Removing a child affects every profile; saving is blocked if any chore would lose its last assigned child.
+
+### New backups
+
+Back up all profiles downloads `daily-profiles.json`: `version: 3`, shared `kids`, `format`, `celebrations`, `activeProfileId`, and a `profiles` object. Its fixed keys are `morning`, `forenoon`, `noon`, `afternoon`, and `evening`, each containing `chores`. Backups exclude daily progress and shifts. Import stages replacement of all profiles and children; close Settings to apply or Discard changes to cancel. Applying clears daily progress.
+
+Older single-schedule backups and stored data are not migrated automatically. Unsupported stored data remains untouched; a message explains how to import a separately converted backup. Closing Settings without importing does not overwrite it. Testing-device backups can be converted outside the app.

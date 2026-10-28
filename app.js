@@ -1,7 +1,7 @@
 (()=>{
 'use strict';
 const R=window.Routine,$=id=>document.getElementById(id),KEY='evening-garden-v1';
-let config=R.defaults(),progress=R.freshProgress(new Date()),renderStamp='',toastTimer,layout;
+let state=R.freshState(),blockedStorage=false,importDraft=null,config=R.profileConfig(state),progress=state.profiles[state.activeProfileId].progress,renderStamp='',toastTimer,layout;
 let todayConfig=config;
 // Twemoji 15.1.0 graphics: Copyright Twitter, Inc. and other contributors.
 // CC BY 4.0: https://creativecommons.org/licenses/by/4.0/
@@ -135,8 +135,8 @@ function uiIcon(name){
 // Keep browser-facing code compatible with Firefox 68 (Android 4.4).
 function replaceChildren(parent,children=[]){parent.textContent='';children.forEach(child=>parent.appendChild(child));}
 function readFile(file){return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=()=>reject(new Error('Could not read the file.'));reader.readAsText(file);});}
-const settings=$('settings-dialog'),shiftDialog=$('shift-dialog'),iconDialog=$('icon-dialog'),nativeDialog=typeof settings.showModal==='function';
-if(!nativeDialog)for(const dialog of [settings,shiftDialog,iconDialog])dialog.classList.add('dialog-fallback');
+const settings=$('settings-dialog'),shiftDialog=$('shift-dialog'),iconDialog=$('icon-dialog'),profileDialog=$('profile-dialog'),nativeDialog=typeof settings.showModal==='function';
+if(!nativeDialog)for(const dialog of [settings,shiftDialog,iconDialog,profileDialog])dialog.classList.add('dialog-fallback');
 function showDialog(dialog){
  if(nativeDialog)dialog.showModal();
  else{dialog.open=true;dialog.setAttribute('open','');dialog.setAttribute('aria-modal','true');$('settings-backdrop').hidden=false;document.body.classList.add('settings-modal-open');document.querySelector('.topbar').setAttribute('aria-hidden','true');document.querySelector('main').setAttribute('aria-hidden','true');dialog.querySelector('.close-dialog').focus();}
@@ -146,13 +146,14 @@ function hideDialog(dialog,opener){
  else{dialog.open=false;dialog.removeAttribute('open');dialog.removeAttribute('aria-modal');$('settings-backdrop').hidden=true;document.body.classList.remove('settings-modal-open');document.querySelector('.topbar').removeAttribute('aria-hidden');document.querySelector('main').removeAttribute('aria-hidden');}
  $(opener).focus();
 }
-function openSettings(){populateEditor(config);showDialog(settings);}
-function closeSettings(){hideDialog(settings,'settings-open');}
+function openSettings(){importDraft=null;$('import-notice').hidden=true;populateEditor(config);showDialog(settings);}
+function closeSettings(){importDraft=null;hideDialog(settings,'settings-open');}
 function closeShift(){hideDialog(shiftDialog,'shift-open');}
-function closeActiveDialog(){if(iconDialog.open)closeIconPicker();else if(shiftDialog.open)closeShift();else if(settings.open)saveAndCloseSettings();}
+function closeProfile(){hideDialog(profileDialog,'profile-open');}
+function closeActiveDialog(){if(profileDialog.open)closeProfile();else if(iconDialog.open)closeIconPicker();else if(shiftDialog.open)closeShift();else if(settings.open)saveAndCloseSettings();}
 $('settings-backdrop').addEventListener('click',closeActiveDialog);
 document.addEventListener('keydown',event=>{
- const dialog=iconDialog.open?iconDialog:shiftDialog.open?shiftDialog:settings.open?settings:null;
+ const dialog=profileDialog.open?profileDialog:iconDialog.open?iconDialog:shiftDialog.open?shiftDialog:settings.open?settings:null;
  if(nativeDialog||!dialog||event.defaultPrevented||!$('celebration').hidden)return;
  if(event.key==='Escape'){event.preventDefault();closeActiveDialog();}
  else if(event.key==='Tab'){
@@ -166,8 +167,18 @@ function escape(v){return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt
 function id(prefix){return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2,8)}`;}
 function kidStyle(kid,index=0){const t=R.kidTheme(kid.color||R.KID_COLORS[index%R.KID_COLORS.length]);return `--kid-bg:${t.bg};--kid-color:${t.color};--kid-ink:${t.ink}`;}
 function notify(message){clearTimeout(toastTimer);$('toast').textContent=message;$('toast').hidden=false;toastTimer=setTimeout(()=>$('toast').hidden=true,2200);}
-function save(){try{localStorage.setItem(KEY,JSON.stringify({config,progress}));$('storage-warning').hidden=true;}catch{$('storage-warning').hidden=false;}}
-function load(){try{const raw=localStorage.getItem(KEY);if(raw){const data=JSON.parse(raw),legacy=data.config&&data.config.version===1;config=R.validate(data.config);progress=R.cleanProgress(data.progress,config,new Date(),legacy);if(legacy){save();notify('Rename children in Settings.');}}}catch(error){if(error.name==='SecurityError')$('storage-warning').hidden=false;else notify('Saved routine unreadable. Starter routine loaded.');}}
+function selectState(){config=R.profileConfig(state);progress=state.profiles[state.activeProfileId].progress;todayConfig=R.effectiveConfig(config,progress);renderStamp='';}
+function save(){
+ state.profiles[state.activeProfileId]={chores:config.chores,progress};state.kids=config.kids;state.format=config.format;state.celebrations=config.celebrations;
+ if(blockedStorage)return;
+ try{localStorage.setItem(KEY,JSON.stringify(state));$('storage-warning').hidden=true;}catch{$('storage-warning').hidden=false;}
+}
+function load(){
+ state=R.freshState();blockedStorage=false;
+ try{const raw=localStorage.getItem(KEY);if(raw)state=R.validateState(JSON.parse(raw));}
+ catch(error){blockedStorage=true;$('storage-warning').textContent='Stored data uses an old or unsupported format and has been preserved. In Settings, import a converted backup of all profiles.';$('storage-warning').hidden=false;}
+ selectState();
+}
 function formatTime(time,format=config.format){const[h,m]=time.split(':').map(Number);return format==='24'?time:`${h%12||12}:${String(m).padStart(2,'0')} ${h<12?'AM':'PM'}`;}
 function timeString(m){return `${String(Math.floor(m/60)).padStart(2,'0')}:${String(Math.floor(m%60)).padStart(2,'0')}`;}
 function digits(time){return escape(formatTime(time)).replace(/ (AM|PM)$/,'<small>$1</small>');}
@@ -195,7 +206,9 @@ function assigned(kidId){return config.chores.filter(c=>c.kidIds.includes(kidId)
 function render(now){
  layout=R.timeline(todayConfig);const focused=document.activeElement&&document.activeElement.dataset&&document.activeElement.dataset.key;
  $('schedule').style.setProperty('--kid-count',config.kids.length);$('timeline').style.height=`${layout.height}px`;
- $('column-heads').innerHTML='<div class="axis-head" aria-hidden="true">'+uiIcon('clock')+'</div><div class="chore-column-head">Chore</div>'+config.kids.map((kid,i)=>{const chores=assigned(kid.id),n=chores.filter(c=>done(kid.id,c.id)).length;return `<div class="kid-head" style="${kidStyle(kid,i)}"><div class="kid-name-wrap"><div class="kid-name">${escape(kid.name)}</div><div class="kid-progress" role="progressbar" aria-label="${escape(kid.name)}’s chores" aria-valuemin="0" aria-valuemax="${chores.length||1}" aria-valuenow="${n}" aria-valuetext="${n} of ${chores.length}"><i style="width:${chores.length?n/chores.length*100:0}%"></i></div><span class="kid-score">${n}/${chores.length}${chores.length&&n===chores.length?uiIcon('check'):''}</span></div></div>`;}).join('');
+ $('column-heads').innerHTML='<div class="axis-head" aria-hidden="true">'+uiIcon('clock')+'</div><div class="chore-column-head">Chore · '+escape(R.PROFILE_NAMES[state.activeProfileId])+'</div>'+config.kids.map((kid,i)=>{const chores=assigned(kid.id),n=chores.filter(c=>done(kid.id,c.id)).length;return `<div class="kid-head" style="${kidStyle(kid,i)}"><div class="kid-name-wrap"><div class="kid-name">${escape(kid.name)}</div><div class="kid-progress" role="progressbar" aria-label="${escape(kid.name)}’s chores" aria-valuemin="0" aria-valuemax="${chores.length||1}" aria-valuenow="${n}" aria-valuetext="${n} of ${chores.length}"><i style="width:${chores.length?n/chores.length*100:0}%"></i></div><span class="kid-score">${n}/${chores.length}${chores.length&&n===chores.length?uiIcon('check'):''}</span></div></div>`;}).join('');
+ $('profile-open').title=R.PROFILE_NAMES[state.activeProfileId];$('profile-open').setAttribute('aria-label','Choose time of day: '+R.PROFILE_NAMES[state.activeProfileId]);
+ if(!config.chores.length){$('time-axis').textContent='';$('kid-columns').innerHTML='<div class="empty-profile"><p>This profile has no chores yet.</p><button type="button" class="primary-button" id="empty-add">Add chores in Settings</button></div>';$('empty-add').addEventListener('click',openSettings);$('timeline').style.height='220px';$('profile-open').title=R.PROFILE_NAMES[state.activeProfileId];$('profile-open').setAttribute('aria-label','Choose time of day: '+R.PROFILE_NAMES[state.activeProfileId]);return;}
  const ticks=timelineTicks();$('time-axis').innerHTML=ticks.map(t=>`<div class="time-tick${t.boundary?' major':''}" style="top:${t.y}px">${digits(timeString(t.m))}</div>`).join('');
  const lines=ticks.map(t=>`<i class="grid-line" aria-hidden="true" style="top:${t.y}px"></i>`).join('');
  const gaps=layout.segments.filter(s=>!s.active&&s.end-s.start>=30).map(s=>`<span class="gap-fold" aria-hidden="true" style="top:${s.top+s.height/2}px">↕ ${Math.floor((s.end-s.start)/60)?`${Math.floor((s.end-s.start)/60)}h `:''}${(s.end-s.start)%60?`${(s.end-s.start)%60}m`:''}</span>`).join('');
@@ -205,7 +218,7 @@ function render(now){
  }).join('');
  if(focused){const previous=[...document.querySelectorAll('.child-check')].find(b=>b.dataset.key===focused);if(previous)previous.focus({preventScroll:true});}
 }
-function updateNow(now){if(!layout)return;const marker=$('now-marker');marker.hidden=now<layout.start||now>layout.end;if(!marker.hidden){marker.style.top=`${R.position(layout,now)}px`;$('now-label').innerHTML=`NOW<br>${digits(timeString(now))}`;}}
+function updateNow(now){if(!layout||!config.chores.length){$('now-marker').hidden=true;return;}const marker=$('now-marker');marker.hidden=now<layout.start||now>layout.end;if(!marker.hidden){marker.style.top=`${R.position(layout,now)}px`;$('now-label').innerHTML=`NOW<br>${digits(timeString(now))}`;}}
 function tick(force=false){
  const date=new Date(),now=R.timeOfDay(date),day=R.dayKey(date);if(progress.day!==day){progress=R.freshProgress(date);save();force=true;}
  todayConfig=R.effectiveConfig(config,progress,date);
@@ -213,7 +226,7 @@ function tick(force=false){
  const stamp=`${day}-${time}`;if(force||stamp!==renderStamp){render(now);renderStamp=stamp;if(shiftDialog.open)refreshShiftPreview();}updateNow(now);
  const active=todayConfig.chores.some(c=>R.onTime(c,now)&&c.kidIds.some(k=>!done(k,c.id))),next=todayConfig.chores.find(c=>R.minutes(c.start)>now&&c.kidIds.some(k=>!done(k,c.id))),left=next?Math.ceil(R.minutes(next.start)-now):0;$('starts-in').textContent=!active&&next?`${formatTime(next.start)} · ${left>=60?`${Math.floor(left/60)}h `:''}${left%60}m`:'';
 }
-function jumpNow(){if(!layout)return;const now=R.timeOfDay(new Date()),target=(now<layout.start?R.minutes(todayConfig.chores[0].start):(now>layout.end?R.minutes(todayConfig.chores[todayConfig.chores.length-1].start):now));$('schedule-scroll').scrollTo({top:Math.max(0,R.position(layout,target)-90),behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});}
+function jumpNow(){if(!layout||!config.chores.length)return;const now=R.timeOfDay(new Date()),target=(now<layout.start?R.minutes(todayConfig.chores[0].start):(now>layout.end?R.minutes(todayConfig.chores[todayConfig.chores.length-1].start):now));$('schedule-scroll').scrollTo({top:Math.max(0,R.position(layout,target)-90),behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});}
 $('jump-now').addEventListener('click',jumpNow);
 $('kid-columns').addEventListener('change',event=>{
  const button=event.target.closest('.child-check');if(!button)return;const kidId=button.dataset.kid,choreId=button.dataset.id,wasChecked=button.checked;tick();const kid=config.kids.find(k=>k.id===kidId),chore=todayConfig.chores.find(c=>c.id===choreId&&c.kidIds.includes(kidId));if(!kid||!chore)return;
@@ -221,7 +234,7 @@ $('kid-columns').addEventListener('change',event=>{
  if(progress.day!==R.dayKey(date)){progress=R.freshProgress(date);todayConfig=R.effectiveConfig(config,progress,date);}
  if(undo){delete progress.done[key];save();tick(true);dismissCelebration();return;}
  progress.done[key]={at:date.toISOString()};
- const personalDone=assigned(kidId).every(c=>done(kidId,c.id)),everyone=config.chores.every(c=>c.kidIds.every(k=>done(k,c.id)));
+ const personalDone=assigned(kidId).length>0&&assigned(kidId).every(c=>done(kidId,c.id)),everyone=config.chores.every(c=>c.kidIds.every(k=>done(k,c.id)));
  const result=R.assignCelebration(config,progress,kidId,choreId,{grand:personalDone,everyone,late:R.isLate(todayConfig.chores.find(c=>c.id===choreId),R.timeOfDay(date))},date);
  progress=result.progress;save();tick(true);
  if(config.celebrations)celebrate(result.celebration,kid.name);else notify(`${kid.name}: done!`);
@@ -240,7 +253,9 @@ const lateReminders=[
 function celebrate(celebration=null,childName='') {
  clearTimeout(toastTimer);$('toast').hidden=true;
  const choice=celebration||R.makeCelebration(),{grand,everyone,late}=choice,index=choice.theme,random=R.celebrationRandom(choice.seed);
- const [icon,title,subtitle,particle,motion]=late?['🐢','','','🍃','float']:grand?['🏆','You did every little step!','Big hugs. Sweet dreams. See you tomorrow!','✦','rain']:celebrationThemes[index];
+ const daytime=state.activeProfileId!=='evening',theme=celebrationThemes[index].slice();
+ if(daytime){if([3,4,17,19].includes(index))theme[2]='Every little step counts.';if(index===19)theme[1]='Another step, all done!';}
+ let [icon,title,subtitle,particle,motion]=late?['🐢','','','🍃','float']:grand?['🏆','You did every little step!',daytime?'Great work!':'Big hugs. Sweet dreams. See you tomorrow!','✦','rain']:theme;
  const layer=$('celebration');(nativeDialog&&settings.open ? settings : document.body).append(layer);layer.classList.toggle('grand',grand);layer.classList.toggle('late',late);layer.dataset.motion=motion;
  $('celebration-icon').innerHTML=iconMarkup(icon);
  const reminder=late?lateReminders[choice.reminder]:'';
@@ -299,18 +314,21 @@ function populateEditor(value){$('clock-format').value=value.format;$('celebrati
 function readEditor(){return R.validate({version:2,format:$('clock-format').value,celebrations:$('celebrations-enabled').checked,kids:currentKids(),chores:[...$('chore-editor').children].map(row=>({id:row.dataset.id,title:row.querySelector('.edit-title').value,icon:row.querySelector('.edit-icon').value,start:row.querySelector('.edit-start').value,end:row.querySelector('.edit-end').value,kidIds:[...row.querySelectorAll('.assignments input:checked')].map(i=>i.value)}))});}
 function settingsError(error){$('settings-error').textContent=error.message;$('settings-error').hidden=false;$('settings-error').scrollIntoView({block:'nearest',behavior:'smooth'});}
 $('settings-open').addEventListener('click',openSettings);
-function finishSettings(updated,nextProgress,message='Saved'){
- const changed=JSON.stringify(updated)!==JSON.stringify(config)||JSON.stringify(nextProgress)!==JSON.stringify(progress);
- if(changed){config=updated;progress=nextProgress;save();tick(true);}
- dismissCelebration();closeSettings();
- if(changed){notify(message);jumpNow();}
-}
 function saveAndCloseSettings(){
  try{
-  const updated=readEditor(),date=new Date();R.effectiveConfig(updated,progress,date);
-  finishSettings(updated,R.cleanProgress(progress,updated,date));
+  if(blockedStorage&&!importDraft)throw Error('First import a converted backup in the new format. Your original data has been preserved.');
+  const updated=readEditor(),next=R.editProfile(importDraft||state,updated);
+  state=next;blockedStorage=false;selectState();save();tick(true);dismissCelebration();closeSettings();notify('Saved');jumpNow();
  }catch(error){settingsError(error);}
 }
+$('profile-open').addEventListener('click',()=>{
+ $('profile-list').innerHTML=R.PROFILE_IDS.map(id=>'<button type="button" class="secondary-button" data-profile="'+id+'" aria-pressed="'+String(id===state.activeProfileId)+'">'+escape(R.PROFILE_NAMES[id])+'</button>').join('');showDialog(profileDialog);
+});
+$('profile-list').addEventListener('click',event=>{
+ const button=event.target.closest('[data-profile]');if(!button)return;
+ save();state.activeProfileId=button.dataset.profile;
+ state=R.validateState(state);selectState();save();dismissCelebration();closeProfile();tick(true);jumpNow();
+});
 function finishShift(nextProgress,message){progress=nextProgress;save();tick(true);closeShift();notify(message);jumpNow();}
 $('shift-open').addEventListener('click',()=>{$('shift-minutes').value='15';refreshShiftPreview();showDialog(shiftDialog);});
 $('shift-cancel').addEventListener('click',closeShift);
@@ -344,8 +362,8 @@ $('shift-undo').addEventListener('click',()=>{
 $('shift-reset').addEventListener('click',()=>{
  finishShift(R.resetShifts(config,progress,new Date()),'Original times restored for today.');
 });
-for(const dialog of [settings,shiftDialog,iconDialog]){
- const close=dialog===settings?saveAndCloseSettings:dialog===iconDialog?closeIconPicker:closeShift;
+for(const dialog of [settings,shiftDialog,iconDialog,profileDialog]){
+ const close=dialog===settings?saveAndCloseSettings:dialog===iconDialog?closeIconPicker:dialog===profileDialog?closeProfile:closeShift;
  dialog.querySelector('.close-dialog').addEventListener('click',close);
  dialog.addEventListener('cancel',event=>{event.preventDefault();close();});
  let backdropPressed=false;
@@ -356,11 +374,11 @@ for(const dialog of [settings,shiftDialog,iconDialog]){
 $('discard-settings').addEventListener('click',()=>{dismissCelebration();closeSettings();});
 $('settings-form').addEventListener('submit',event=>event.preventDefault());
 $('add-kid').addEventListener('click',()=>{const child={id:id('child'),name:'',color:R.KID_COLORS[$('kids-editor').children.length%R.KID_COLORS.length]};$('kids-editor').append(kidRow(child,$('kids-editor').children.length));refreshAssignments();$('add-kid').disabled=$('kids-editor').children.length>=8;$('kids-editor').lastChild.querySelector('.kid-name-input').focus();});
-$('add-chore').addEventListener('click',()=>{const rows=[...$('chore-editor').children],last=rows.length?rows[rows.length-1].querySelector('.edit-end').value:'18:00';let start=R.minutes(last);if(!Number.isFinite(start)||start>=1439)start=1080;const row=editorRow({id:id('chore'),title:'',icon:'⭐',start:timeString(start),end:timeString(Math.min(start+15,1439)),kidIds:currentKids().map(k=>k.id)});$('chore-editor').append(row);updateAddButton();row.querySelector('.edit-title').focus();});
+$('add-chore').addEventListener('click',()=>{const rows=[...$('chore-editor').children],last=rows.length?rows[rows.length-1].querySelector('.edit-end').value:timeString(R.PROFILE_START[state.activeProfileId]);let start=R.minutes(last);if(!Number.isFinite(start)||start>=1439)start=R.PROFILE_START[state.activeProfileId];const row=editorRow({id:id('chore'),title:'',icon:'⭐',start:timeString(start),end:timeString(Math.min(start+15,1439)),kidIds:currentKids().map(k=>k.id)});$('chore-editor').append(row);updateAddButton();row.querySelector('.edit-title').focus();});
 $('preview-celebration').addEventListener('click',()=>celebrate());
-$('export-settings').addEventListener('click',()=>{try{const value=readEditor(),url=URL.createObjectURL(new Blob([JSON.stringify(value,null,2)],{type:'application/json'})),a=document.createElement('a');a.href=url;a.download='evening-garden-routine.json';a.hidden=true;document.body.appendChild(a);a.click();setTimeout(()=>{a.remove();URL.revokeObjectURL(url);},1000);}catch(error){settingsError(error);}});
+$('export-settings').addEventListener('click',()=>{try{const value=R.exportState(R.editProfile(importDraft||state,readEditor())),url=URL.createObjectURL(new Blob([JSON.stringify(value,null,2)],{type:'application/json'})),a=document.createElement('a');a.href=url;a.download='daily-profiles.json';a.hidden=true;document.body.appendChild(a);a.click();setTimeout(()=>{a.remove();URL.revokeObjectURL(url);},1000);}catch(error){settingsError(error);}});
 $('import-settings').addEventListener('click',()=>$('import-file').click());
-$('import-file').addEventListener('change',async event=>{const file=event.target.files[0];if(!file)return;try{if(file.size>100000)throw Error('Choose a routine file smaller than 100 KB.');populateEditor(R.validate(JSON.parse(await readFile(file))));notify('Loaded. Close Settings to save.');}catch(error){settingsError(new Error(error instanceof SyntaxError?'Invalid JSON file.':error.message));}finally{event.target.value='';}});
+$('import-file').addEventListener('change',async event=>{const file=event.target.files[0];if(!file)return;try{if(file.size>100000)throw Error('Choose a routine file smaller than 100 KB.');const imported=R.importState(JSON.parse(await readFile(file)));imported.activeProfileId=state.activeProfileId;importDraft=imported;populateEditor(R.profileConfig(imported));$('import-notice').textContent='Importing replaces all profiles and children and clears daily progress. Close Settings to save; Discard changes cancels the import.';$('import-notice').hidden=false;notify('All profiles and children loaded. Close Settings to replace the setup, or Discard changes to cancel.');}catch(error){settingsError(new Error(error instanceof SyntaxError?'Invalid JSON file.':error.message));}finally{event.target.value='';}});
 // BEGIN SCREEN AWAKE
 /* Silent video samples and fallback technique adapted from NoSleep.js 0.12.0.
  * https://github.com/richtr/NoSleep.js/tree/07fcee254724ab1b79076fbc22f3dd447649a2eb
@@ -464,7 +482,7 @@ document.addEventListener('click',()=>{if(document.fullscreenElement&&$('fullscr
 window.addEventListener('pagehide',()=>screenAwake.disable());
 window.addEventListener('pageshow',syncFullscreenAwake);
 
-window.addEventListener('storage',event=>{if(event.key===KEY||event.key===null){if(event.newValue===null){config=R.defaults();progress=R.freshProgress(new Date());}else load();tick(true);}});
+window.addEventListener('storage',event=>{if(event.key===KEY||event.key===null){dismissCelebration();if(iconDialog.open)closeIconPicker();if(settings.open)closeSettings();if(shiftDialog.open)closeShift();if(profileDialog.open)closeProfile();load();tick(true);notify('Data changed in another tab. Unsaved editors have been closed.');}});
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)tick(true);syncFullscreenAwake();});
 for(const placeholder of document.querySelectorAll('[data-ui-icon]'))placeholder.innerHTML=uiIcon(placeholder.dataset.uiIcon);
 load();tick(true);$('startup-warning').hidden=true;requestAnimationFrame(jumpNow);setInterval(tick,1000);

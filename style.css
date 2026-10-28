@@ -118,3 +118,5 @@ button:focus,input:focus,select:focus,#schedule-scroll:focus{outline:3px solid #
 @media(max-width:450px){#icon-dialog{max-width:calc(100% - 12px);width:calc(100% - 12px);padding:16px 10px}#icon-categories button{font-size:14px;padding:8px}#icon-choices{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}#icon-picker-title{font-size:23px}}
 
 .shift-actions #shift-apply{width:100%}
+
+#profile-dialog{width:430px}#profile-list{display:flex;flex-direction:column;margin-top:20px}#profile-list button{margin:5px 0;text-align:left}#profile-list [aria-pressed=true]{background:var(--green);color:white}.empty-profile{padding:24px;font-size:20px}.chore-column-head{font-size:23px}@media(max-width:450px){.top-actions{max-width:220px}.top-actions .icon-button{width:39px;padding:6px}}
