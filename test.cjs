@@ -206,3 +206,23 @@ test('reward choice limits match the bundled theme and reminder lists',()=>{
  const counts=vm.runInNewContext(lists+';({themes:celebrationThemes.length,reminders:lateReminders.length})');
  assert.equal(counts.themes,R.CELEBRATION_COUNT);assert.equal(counts.reminders,R.LATE_REMINDER_COUNT);
 });
+
+test('reset restores original times after multiple shifts while preserving completions and rewards',()=>{
+ const c=R.defaults(),date=new Date(2026,9,23,19),p=R.freshProgress(date),key=R.completionKey(c.kids[0].id,'supper');
+ const first=R.shiftRemaining(c,p,15,date).progress;
+ for(const kid of c.kids)first.done[R.completionKey(kid.id,'supper')]={at:date.toISOString()};
+ const second=R.shiftRemaining(c,first,10,date).progress;
+ assert.equal(second.offsets.supper,15);assert.equal(second.offsets.teeth,25);
+ const rewarded=R.assignCelebration(c,second,c.kids[0].id,'supper',{late:true},date,()=>.4).progress;
+ const original=JSON.stringify(rewarded),configBefore=JSON.stringify(c);
+ const reset=R.resetShifts(c,JSON.parse(original),date);
+ assert.deepEqual(R.effectiveConfig(c,reset,date),c);
+ assert.deepEqual({...reset.done},{...rewarded.done});assert.ok(reset.done[key]);
+ assert.deepEqual(reset.celebrations,rewarded.celebrations);
+ assert.equal(reset.offsets,undefined);assert.equal(reset.undoOffsets,undefined);
+ assert.equal(JSON.stringify(rewarded),original);assert.equal(JSON.stringify(c),configBefore);
+ const reload=R.cleanProgress(JSON.parse(JSON.stringify(reset)),c,date);assert.deepEqual(R.effectiveConfig(c,reload,date),c);
+ assert.deepEqual(R.resetShifts(c,reset,date),reset);
+ const newShift=R.shiftRemaining(c,reset,5,date).progress;assert.equal(newShift.offsets.teeth,5);
+ assert.equal(R.undoShift(c,newShift,date).offsets,undefined);
+});

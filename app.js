@@ -319,6 +319,7 @@ function refreshShiftPreview(){
  const date=new Date(),undo=$('shift-undo'),preview=$('shift-preview');
  const current=R.cleanProgress(progress,config,date);
  undo.hidden=!Object.prototype.hasOwnProperty.call(current,'undoOffsets');undo.disabled=false;
+ $('shift-reset').hidden=!current.offsets;
  $('shift-status').textContent=current.offsets?'Today’s times have been adjusted. The regular schedule for other days is unchanged.':'Applies only today. The regular schedule for other days is unchanged.';
  try{
   const updated=config;R.effectiveConfig(updated,progress,date);
@@ -339,6 +340,9 @@ $('shift-apply').addEventListener('click',()=>{
 $('shift-undo').addEventListener('click',()=>{
  try{finishShift(R.undoShift(config,progress,new Date()),'Last daily shift undone.');}
  catch(error){const preview=$('shift-preview');preview.classList.add('error');preview.textContent=error.message;}
+});
+$('shift-reset').addEventListener('click',()=>{
+ finishShift(R.resetShifts(config,progress,new Date()),'Original times restored for today.');
 });
 for(const dialog of [settings,shiftDialog,iconDialog]){
  const close=dialog===settings?saveAndCloseSettings:dialog===iconDialog?closeIconPicker:closeShift;

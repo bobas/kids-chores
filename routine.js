@@ -117,6 +117,10 @@ function undoShift(config,progress,date=new Date()){
  if(Object.keys(next.undoOffsets).length)next.offsets=next.undoOffsets;else delete next.offsets;
  delete next.undoOffsets;return next;
 }
+function resetShifts(config,progress,date=new Date()){
+ const next=cleanProgress(progress,config,date);
+ delete next.offsets;delete next.undoOffsets;return next;
+}
 function onTime(chore,now){return now>=minutes(chore.start)&&now<minutes(chore.end);}
 function isLate(chore,now){return now>minutes(chore.end);}
 function status(chore,now,done){return done?'done':now<minutes(chore.start)?'upcoming':onTime(chore,now)?'current':'past';}
@@ -151,6 +155,6 @@ function kidTheme(color){
  const luminance=linear[0]*.2126+linear[1]*.7152+linear[2]*.0722;
  return {color,bg,ink:luminance>.179?'#17251d':'#ffffff'};
 }
-const api={CELEBRATION_COUNT,LATE_REMINDER_COUNT,makeCelebration,assignCelebration,celebrationRandom,KID_COLORS,kidTheme,ICON_CATEGORIES,ICONS,defaults,minutes,dayKey,timeOfDay,migrate,validate,completionKey,freshProgress,cleanProgress,effectiveConfig,shiftRemaining,undoShift,onTime,isLate,status,timeline,position,rangeSector};
+const api={CELEBRATION_COUNT,LATE_REMINDER_COUNT,makeCelebration,assignCelebration,celebrationRandom,KID_COLORS,kidTheme,ICON_CATEGORIES,ICONS,defaults,minutes,dayKey,timeOfDay,migrate,validate,completionKey,freshProgress,cleanProgress,effectiveConfig,shiftRemaining,undoShift,resetShifts,onTime,isLate,status,timeline,position,rangeSector};
 if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.Routine=api;
 })(typeof window!=='undefined'?window:globalThis);

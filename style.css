@@ -116,3 +116,5 @@ button:focus,input:focus,select:focus,#schedule-scroll:focus{outline:3px solid #
 .icon-choice[aria-pressed=true]{border-color:var(--green);background:#dce8ce;box-shadow:inset 0 0 0 1px var(--green)}
 #icon-dialog .dialog-footer{flex-shrink:0;margin-top:12px;padding-top:12px}
 @media(max-width:450px){#icon-dialog{max-width:calc(100% - 12px);width:calc(100% - 12px);padding:16px 10px}#icon-categories button{font-size:14px;padding:8px}#icon-choices{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}#icon-picker-title{font-size:23px}}
+
+.shift-actions #shift-apply{width:100%}

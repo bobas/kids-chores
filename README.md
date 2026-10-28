@@ -79,7 +79,7 @@ Actual screen-sleep prevention also depends on the browser, operating system, an
 
 ## Shift today’s times
 
-Use the clock icon in the top bar (**Shift times**) to open a separate dialog for today’s adjustment. Choose +5, +10, +15, or +30 minutes, or enter a custom positive or negative offset. The preview shows the old and new times. **Apply shift and close** saves today’s adjustment and closes the dialog. Cancel, the close button, Escape, or tapping outside closes without applying the preview. **Undo last shift** restores the times before the last adjustment while preserving all checkmarks.
+Use the clock icon in the top bar (**Shift times**) to open a separate dialog for today’s adjustment. Choose +5, +10, +15, or +30 minutes, or enter a custom positive or negative offset. The preview shows the old and new times. **Apply shift and close** saves today’s adjustment and closes the dialog. Cancel, the close button, Escape, or tapping outside closes without applying the preview. **Undo last shift** restores the times before the last adjustment while preserving all checkmarks. **Restore original times** clears all of today’s shifts and their undo history, returning every chore to the regular schedule. Checkmarks and saved celebrations are preserved.
 
 The same offset applies to every future chore and every chore that any assigned child has not finished, including overdue and currently active chores. Completed past chores stay in place. Future chores move even if completed early. Both start and end move, preserving durations and gaps between shifted chores. Completed history can overlap shifted rows.
 
