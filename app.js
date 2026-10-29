@@ -236,8 +236,8 @@ $('kid-columns').addEventListener('change',event=>{
  if(progress.day!==R.dayKey(date)){progress=R.freshProgress(date);todayConfig=R.effectiveConfig(config,progress,date);}
  if(undo){delete progress.done[key];save();tick(true);dismissCelebration();return;}
  progress.done[key]={at:date.toISOString()};
- const personalDone=assigned(kidId).length>0&&assigned(kidId).every(c=>done(kidId,c.id)),everyone=config.chores.every(c=>c.kidIds.every(k=>done(k,c.id)));
- const result=R.assignCelebration(config,progress,kidId,choreId,{grand:personalDone,everyone,late:R.isLate(todayConfig.chores.find(c=>c.id===choreId),R.timeOfDay(date))},date);
+ const flags=R.celebrationFlags(todayConfig,progress,kidId,choreId,R.timeOfDay(date));
+ const result=R.assignCelebration(config,progress,kidId,choreId,flags,date);
  progress=result.progress;save();tick(true);
  if(config.celebrations)celebrate(result.celebration,kid.name);else notify(`${kid.name}: done!`);
 });

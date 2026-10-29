@@ -114,3 +114,7 @@ Older single-schedule backups and stored data are not migrated automatically. Un
 ## Toolbar and menu
 
 The toolbar has only Now, Fullscreen, and a hamburger menu. The menu directly lists the five profiles, followed by Shift times, Chores, and Settings. Chores contains titles, icons, times, and child assignments for the selected profile. Settings contains children and colors, clock format, celebrations and their preview, and all-profile backups. Both editors save valid changes when closed; Discard changes abandons their edits. Invalid values keep the relevant dialog open with an explanation.
+
+## Trophy for completing a profile
+
+When a child finishes all their assigned chores by the latest end time in the selected profile, they earn a trophy even if the last checkbox belongs to a chore whose own deadline has passed. Completion order does not matter. Today’s shifted times apply; finishing exactly at the final deadline still counts as on time. Individual chores before full completion retain their own deadlines. A previously cached ordinary celebration or turtle does not prevent earning the finale trophy. Earned trophies can be replayed like other daily celebrations.

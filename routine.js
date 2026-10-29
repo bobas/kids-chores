@@ -61,12 +61,22 @@ function cleanCelebrations(value,config){
 function makeCelebration(flags={},random=Math.random){
  return {theme:Math.floor(random()*CELEBRATION_COUNT),reminder:Math.floor(random()*LATE_REMINDER_COUNT),seed:Math.floor(random()*4294967296),late:!!flags.late,grand:!!flags.grand,everyone:!!flags.everyone};
 }
+function celebrationFlags(config,progress,kidId,choreId,now){
+ const assigned=config.chores.filter(ch=>ch.kidIds.includes(kidId));
+ const finished=ch=>!!progress.done[completionKey(kidId,ch.id)];
+ const grand=assigned.length>0&&assigned.every(finished);
+ const everyone=config.chores.length>0&&config.chores.every(ch=>ch.kidIds.every(kid=>!!progress.done[completionKey(kid,ch.id)]));
+ const chore=config.chores.find(ch=>ch.id===choreId);
+ const deadline=grand?Math.max(...config.chores.map(ch=>minutes(ch.end))):minutes(chore.end);
+ return {grand,everyone,late:now>deadline};
+}
 function assignCelebration(config,progress,kidId,choreId,flags={},date=new Date(),random=Math.random){
  const chore=config.chores.find(ch=>ch.id===choreId&&ch.kidIds.includes(kidId));
  if(!chore)throw Error('A celebration must belong to an assigned child’s chore.');
  const next=cleanProgress(progress,config,date),key=completionKey(kidId,choreId);
  if(!next.celebrations)next.celebrations=Object.create(null);
  if(!next.celebrations[key])next.celebrations[key]=makeCelebration(flags,random);
+ else if(flags.grand&&(!next.celebrations[key].grand||next.celebrations[key].late&&!flags.late))Object.assign(next.celebrations[key],{grand:true,everyone:!!flags.everyone,late:!!flags.late});
  return {progress:next,celebration:next.celebrations[key]};
 }
 function celebrationRandom(seed){
@@ -184,6 +194,6 @@ function importState(input,date=new Date()){
  const next=validateState(input,date);for(const id of PROFILE_IDS)next.profiles[id].progress=freshProgress(date);return next;
 }
 
-const api={PROFILE_IDS,PROFILE_NAMES,PROFILE_START,profileConfig,freshState,validateState,editProfile,exportState,importState,CELEBRATION_COUNT,LATE_REMINDER_COUNT,makeCelebration,assignCelebration,celebrationRandom,KID_COLORS,kidTheme,ICON_CATEGORIES,ICONS,defaults,minutes,dayKey,timeOfDay,validate,completionKey,freshProgress,cleanProgress,effectiveConfig,shiftRemaining,undoShift,resetShifts,onTime,isLate,status,timeline,position,rangeSector};
+const api={PROFILE_IDS,PROFILE_NAMES,PROFILE_START,profileConfig,freshState,validateState,editProfile,exportState,importState,CELEBRATION_COUNT,LATE_REMINDER_COUNT,makeCelebration,celebrationFlags,assignCelebration,celebrationRandom,KID_COLORS,kidTheme,ICON_CATEGORIES,ICONS,defaults,minutes,dayKey,timeOfDay,validate,completionKey,freshProgress,cleanProgress,effectiveConfig,shiftRemaining,undoShift,resetShifts,onTime,isLate,status,timeline,position,rangeSector};
 if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.Routine=api;
 })(typeof window!=='undefined'?window:globalThis);

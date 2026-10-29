@@ -157,7 +157,7 @@ test('each checkbox replays its first daily reward without drawing again',()=>{
  p.done[key]={at:d.toISOString()};const draw=()=>{draws++;return .1;},first=R.assignCelebration(c,p,'child-1','supper',{late:false,grand:false,everyone:false},d,draw);
  assert.equal(draws,3);assert.equal(p.celebrations,undefined);delete first.progress.done[key];
  const undone=R.cleanProgress(first.progress,c,d);assert.deepEqual(undone.celebrations[key],first.celebration);
- undone.done[key]={at:d.toISOString()};const replay=R.assignCelebration(c,undone,'child-1','supper',{late:true,grand:true,everyone:true},d,draw);
+ undone.done[key]={at:d.toISOString()};const replay=R.assignCelebration(c,undone,'child-1','supper',{late:true,grand:false,everyone:false},d,draw);
  assert.equal(draws,3);assert.deepEqual(replay.celebration,first.celebration);assert.equal(replay.celebration.late,false);
 });
 test('celebrations belong to individual children and chores',()=>{
@@ -254,4 +254,28 @@ test('new backups round-trip every profile without any daily progress',()=>{
  const backup=R.exportState(s);for(const id of R.PROFILE_IDS)assert.equal(backup.profiles[id].progress,undefined);
  const restored=R.importState(JSON.parse(JSON.stringify(backup)),date());assert.deepEqual(restored.profiles.evening.chores,s.profiles.evening.chores);assert.equal(restored.profiles.evening.progress.offsets,undefined);
  backup.profiles.evening.progress=s.profiles.evening.progress;assert.equal(R.importState(backup,date()).profiles.evening.progress.offsets,undefined);
+});
+
+test('finale uses the latest profile end rather than the last checked chore end',()=>{
+ const c=R.defaults(),d=new Date(2026,9,23,20),p=R.freshProgress(d),kid='child-1';
+ for(const ch of c.chores)p.done[R.completionKey(kid,ch.id)]={at:d.toISOString()};
+ assert.deepEqual(R.celebrationFlags(c,p,kid,'supper',1200),{grand:true,everyone:false,late:false});
+ assert.equal(R.celebrationFlags(c,p,kid,'supper',1210).late,false);
+ assert.equal(R.celebrationFlags(c,p,kid,'supper',1210.001).late,true);
+ delete p.done[R.completionKey(kid,'bed')];
+ assert.deepEqual(R.celebrationFlags(c,p,kid,'supper',1200),{grand:false,everyone:false,late:true});
+});
+test('finale deadline uses shifted times and maximum end even when rows have a different order',()=>{
+ const c=R.defaults(),d=new Date(2026,9,23,20),p=R.freshProgress(d);p.offsets={bed:20};
+ for(const ch of c.chores)for(const kid of ch.kidIds)p.done[R.completionKey(kid,ch.id)]={at:d.toISOString()};
+ const today=R.effectiveConfig(c,p,d);today.chores.reverse();
+ assert.deepEqual(R.celebrationFlags(today,p,'child-1','supper',1220),{grand:true,everyone:true,late:false});
+ assert.equal(R.celebrationFlags(today,p,'child-1','supper',1230.001).late,true);
+});
+test('a cached ordinary turtle upgrades to an earned trophy without redrawing the daily choice',()=>{
+ const c=R.defaults(),d=new Date(2026,9,23,20),first=R.assignCelebration(c,R.freshProgress(d),'child-1','supper',{grand:false,late:true},d,()=>.3);
+ const before=JSON.stringify(first.progress),upgrade=R.assignCelebration(c,first.progress,'child-1','supper',{grand:true,late:false,everyone:false},d,()=>{throw Error('Do not redraw');});
+ assert.equal(upgrade.celebration.grand,true);assert.equal(upgrade.celebration.late,false);assert.equal(upgrade.celebration.seed,first.celebration.seed);assert.equal(JSON.stringify(first.progress),before);
+ const replay=R.assignCelebration(c,upgrade.progress,'child-1','supper',{grand:true,late:true},d,()=>{throw Error('Do not redraw');});assert.deepEqual(replay.celebration,upgrade.celebration);
+ const tooLate=R.assignCelebration(c,first.progress,'child-1','supper',{grand:true,late:true},d);assert.equal(tooLate.celebration.late,true);
 });
