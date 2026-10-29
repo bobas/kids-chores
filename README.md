@@ -67,7 +67,7 @@ The revised app has 47 automated tests for child-specific progress, assignment c
 
 ## Icons and licensing
 
-[Twemoji 15.1.0](https://github.com/jdecked/twemoji/tree/7407fa31c51be5ab45626b8ab5554d50cc8073f6) graphics by Twitter, Inc. and other contributors are licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). See `LICENSE-TWEMOJI.txt` for the full license. The 101 selected SVG graphics are embedded in `ICON_ART` in `app.js`, so the standalone HTML works offline and the existing server needs no restart. Artwork is unchanged; rendering adds styling and accessibility attributes to the SVG root. The app draws geometric particles and controls as vectors. No Twemoji JavaScript or network image requests are used.
+[Twemoji 15.1.0](https://github.com/jdecked/twemoji/tree/7407fa31c51be5ab45626b8ab5554d50cc8073f6) graphics by Twitter, Inc. and other contributors are licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). See `LICENSE-TWEMOJI.txt` for the full license. The 105 selected SVG graphics are embedded in `ICON_ART` in `app.js`, so the standalone HTML works offline and the existing server needs no restart. Artwork is unchanged; rendering adds styling and accessibility attributes to the SVG root. The app draws geometric particles and controls as vectors. No Twemoji JavaScript or network image requests are used.
 
 ## Keep the screen awake in fullscreen
 
@@ -99,7 +99,7 @@ Health includes medicine, a plaster, a stethoscope, a thermometer, an injection,
 
 ## Time-of-day profiles
 
-Open the hamburger menu to select Morning, Forenoon, Noon, Afternoon, or Evening. The selected profile also appears in the Chore heading. Switching is manual and the last selection is remembered. All profiles start empty, with an Add chores action. New chores in empty profiles start at 07:00, 09:00, 12:00, 15:00, or 18:00, respectively; these are suggestions, not restrictions.
+Open the hamburger menu to select Morning, Forenoon, Noon, Afternoon, or Evening. Profiles appear as tiles with an illustration above the name: sunrise, sun behind a cloud, sun, sunset, and moon. The selected tile is highlighted in green. The selected profile also appears in the Chore heading. Switching is manual and the last selection is remembered. All profiles start empty, with an Add chores action. New chores in empty profiles start at 07:00, 09:00, 12:00, 15:00, or 18:00, respectively; these are suggestions, not restrictions.
 
 Children, colors, clock format, and the celebrations preference are shared. Each profile has its own chores, assignments, checkmarks, cached celebrations, daily shifts, undo, and reset. Final celebrations count only that profile. Daytime profiles use neutral celebration text; Evening keeps the bedtime wording. Daily progress expires at local midnight, including in inactive profiles.
 
