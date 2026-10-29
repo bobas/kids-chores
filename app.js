@@ -129,14 +129,14 @@ function iconMarkup(symbol){
  return svg.replace('<svg ','<svg class="app-icon" aria-hidden="true" focusable="false" ');
 }
 function uiIcon(name){
- const paths={close:'<path d="M6 6l12 12M18 6L6 18"/>',plus:'<path d="M12 5v14M5 12h14"/>',fullscreen:'<path d="M9 3H3v6m12-6h6v6M3 15v6h6m12-6v6h-6"/>',down:'<path d="M12 4v16M6 14l6 6 6-6"/>',check:'<path d="M5 12l4 4L19 6"/>',clock:'<circle cx="12" cy="12" r="9"/><path d="M12 6v6h5"/>',caret:'<path d="M8 10l4 4 4-4"/>',sparkle:'<path d="M12 2l3 7 7 3-7 3-3 7-3-7-7-3 7-3z"/>',settings:'<path d="M9 3h6l1 3 3 1 2 5-2 5-3 1-1 3H9l-1-3-3-1-2-5 2-5 3-1z"/><circle cx="12" cy="12" r="3"/>'};
+ const paths={menu:'<path d="M4 6h16M4 12h16M4 18h16"/>',close:'<path d="M6 6l12 12M18 6L6 18"/>',plus:'<path d="M12 5v14M5 12h14"/>',fullscreen:'<path d="M9 3H3v6m12-6h6v6M3 15v6h6m12-6v6h-6"/>',down:'<path d="M12 4v16M6 14l6 6 6-6"/>',check:'<path d="M5 12l4 4L19 6"/>',clock:'<circle cx="12" cy="12" r="9"/><path d="M12 6v6h5"/>',caret:'<path d="M8 10l4 4 4-4"/>',sparkle:'<path d="M12 2l3 7 7 3-7 3-3 7-3-7-7-3 7-3z"/>',settings:'<path d="M9 3h6l1 3 3 1 2 5-2 5-3 1-1 3H9l-1-3-3-1-2-5 2-5 3-1z"/><circle cx="12" cy="12" r="3"/>'};
  return '<svg class="ui-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">'+(paths[name]||paths.sparkle)+'</svg>';
 }
 // Keep browser-facing code compatible with Firefox 68 (Android 4.4).
 function replaceChildren(parent,children=[]){parent.textContent='';children.forEach(child=>parent.appendChild(child));}
 function readFile(file){return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=()=>reject(new Error('Could not read the file.'));reader.readAsText(file);});}
-const settings=$('settings-dialog'),shiftDialog=$('shift-dialog'),iconDialog=$('icon-dialog'),profileDialog=$('profile-dialog'),nativeDialog=typeof settings.showModal==='function';
-if(!nativeDialog)for(const dialog of [settings,shiftDialog,iconDialog,profileDialog])dialog.classList.add('dialog-fallback');
+const settings=$('settings-dialog'),shiftDialog=$('shift-dialog'),iconDialog=$('icon-dialog'),profileDialog=$('profile-dialog'),choresDialog=$('chores-dialog'),nativeDialog=typeof settings.showModal==='function';
+if(!nativeDialog)for(const dialog of [settings,shiftDialog,iconDialog,profileDialog,choresDialog])dialog.classList.add('dialog-fallback');
 function showDialog(dialog){
  if(nativeDialog)dialog.showModal();
  else{dialog.open=true;dialog.setAttribute('open','');dialog.setAttribute('aria-modal','true');$('settings-backdrop').hidden=false;document.body.classList.add('settings-modal-open');document.querySelector('.topbar').setAttribute('aria-hidden','true');document.querySelector('main').setAttribute('aria-hidden','true');dialog.querySelector('.close-dialog').focus();}
@@ -146,14 +146,16 @@ function hideDialog(dialog,opener){
  else{dialog.open=false;dialog.removeAttribute('open');dialog.removeAttribute('aria-modal');$('settings-backdrop').hidden=true;document.body.classList.remove('settings-modal-open');document.querySelector('.topbar').removeAttribute('aria-hidden');document.querySelector('main').removeAttribute('aria-hidden');}
  $(opener).focus();
 }
-function openSettings(){importDraft=null;$('import-notice').hidden=true;populateEditor(config);showDialog(settings);}
-function closeSettings(){importDraft=null;hideDialog(settings,'settings-open');}
-function closeShift(){hideDialog(shiftDialog,'shift-open');}
+function openSettings(){if(profileDialog.open)closeProfile();importDraft=null;$('import-notice').hidden=true;populateEditor(config);showDialog(settings);}
+function closeSettings(){importDraft=null;hideDialog(settings,'profile-open');}
+function closeShift(){hideDialog(shiftDialog,'profile-open');}
 function closeProfile(){hideDialog(profileDialog,'profile-open');}
-function closeActiveDialog(){if(profileDialog.open)closeProfile();else if(iconDialog.open)closeIconPicker();else if(shiftDialog.open)closeShift();else if(settings.open)saveAndCloseSettings();}
+function openChores(){if(profileDialog.open)closeProfile();importDraft=null;populateEditor(config);$('chores-error').hidden=true;$('chores-title').textContent='Chores · '+R.PROFILE_NAMES[state.activeProfileId];showDialog(choresDialog);}
+function closeChores(){hideDialog(choresDialog,'profile-open');}
+function closeActiveDialog(){if(profileDialog.open)closeProfile();else if(iconDialog.open)closeIconPicker();else if(shiftDialog.open)closeShift();else if(choresDialog.open||settings.open)saveAndCloseSettings();}
 $('settings-backdrop').addEventListener('click',closeActiveDialog);
 document.addEventListener('keydown',event=>{
- const dialog=profileDialog.open?profileDialog:iconDialog.open?iconDialog:shiftDialog.open?shiftDialog:settings.open?settings:null;
+ const dialog=profileDialog.open?profileDialog:iconDialog.open?iconDialog:shiftDialog.open?shiftDialog:choresDialog.open?choresDialog:settings.open?settings:null;
  if(nativeDialog||!dialog||event.defaultPrevented||!$('celebration').hidden)return;
  if(event.key==='Escape'){event.preventDefault();closeActiveDialog();}
  else if(event.key==='Tab'){
@@ -207,8 +209,8 @@ function render(now){
  layout=R.timeline(todayConfig);const focused=document.activeElement&&document.activeElement.dataset&&document.activeElement.dataset.key;
  $('schedule').style.setProperty('--kid-count',config.kids.length);$('timeline').style.height=`${layout.height}px`;
  $('column-heads').innerHTML='<div class="axis-head" aria-hidden="true">'+uiIcon('clock')+'</div><div class="chore-column-head">Chore · '+escape(R.PROFILE_NAMES[state.activeProfileId])+'</div>'+config.kids.map((kid,i)=>{const chores=assigned(kid.id),n=chores.filter(c=>done(kid.id,c.id)).length;return `<div class="kid-head" style="${kidStyle(kid,i)}"><div class="kid-name-wrap"><div class="kid-name">${escape(kid.name)}</div><div class="kid-progress" role="progressbar" aria-label="${escape(kid.name)}’s chores" aria-valuemin="0" aria-valuemax="${chores.length||1}" aria-valuenow="${n}" aria-valuetext="${n} of ${chores.length}"><i style="width:${chores.length?n/chores.length*100:0}%"></i></div><span class="kid-score">${n}/${chores.length}${chores.length&&n===chores.length?uiIcon('check'):''}</span></div></div>`;}).join('');
- $('profile-open').title=R.PROFILE_NAMES[state.activeProfileId];$('profile-open').setAttribute('aria-label','Choose time of day: '+R.PROFILE_NAMES[state.activeProfileId]);
- if(!config.chores.length){$('time-axis').textContent='';$('kid-columns').innerHTML='<div class="empty-profile"><p>This profile has no chores yet.</p><button type="button" class="primary-button" id="empty-add">Add chores in Settings</button></div>';$('empty-add').addEventListener('click',openSettings);$('timeline').style.height='220px';$('profile-open').title=R.PROFILE_NAMES[state.activeProfileId];$('profile-open').setAttribute('aria-label','Choose time of day: '+R.PROFILE_NAMES[state.activeProfileId]);return;}
+ $('profile-open').title='Menu: '+R.PROFILE_NAMES[state.activeProfileId];$('profile-open').setAttribute('aria-label','Open menu: '+R.PROFILE_NAMES[state.activeProfileId]);
+ if(!config.chores.length){$('time-axis').textContent='';$('kid-columns').innerHTML='<div class="empty-profile"><p>This profile has no chores yet.</p><button type="button" class="primary-button" id="empty-add">Add chores</button></div>';$('empty-add').addEventListener('click',openChores);$('timeline').style.height='220px';$('profile-open').title='Menu: '+R.PROFILE_NAMES[state.activeProfileId];$('profile-open').setAttribute('aria-label','Open menu: '+R.PROFILE_NAMES[state.activeProfileId]);return;}
  const ticks=timelineTicks();$('time-axis').innerHTML=ticks.map(t=>`<div class="time-tick${t.boundary?' major':''}" style="top:${t.y}px">${digits(timeString(t.m))}</div>`).join('');
  const lines=ticks.map(t=>`<i class="grid-line" aria-hidden="true" style="top:${t.y}px"></i>`).join('');
  const gaps=layout.segments.filter(s=>!s.active&&s.end-s.start>=30).map(s=>`<span class="gap-fold" aria-hidden="true" style="top:${s.top+s.height/2}px">↕ ${Math.floor((s.end-s.start)/60)?`${Math.floor((s.end-s.start)/60)}h `:''}${(s.end-s.start)%60?`${(s.end-s.start)%60}m`:''}</span>`).join('');
@@ -291,14 +293,14 @@ function openIconPicker(button){
  $('icon-picker-title').textContent=title?'Icon: '+title:'Choose icon';
  $('icon-categories').innerHTML=['all',...R.ICON_CATEGORIES.map(group=>group.id)].map(id=>'<button type="button" data-category="'+id+'" aria-pressed="false">'+escape(ICON_CATEGORY_LABELS[id])+'</button>').join('');
  renderIconChoices();
- if(!nativeDialog){settings.hidden=true;settings.setAttribute('aria-hidden','true');}
+ if(!nativeDialog){choresDialog.hidden=true;choresDialog.setAttribute('aria-hidden','true');}
  showDialog(iconDialog);
  const selected=$('icon-choices').querySelector('[aria-pressed="true"]');
  if(selected){selected.focus();selected.scrollIntoView({block:'nearest'});}
 }
 function closeIconPicker(){
  if(nativeDialog)iconDialog.close();
- else{iconDialog.open=false;iconDialog.removeAttribute('open');iconDialog.removeAttribute('aria-modal');settings.hidden=false;settings.removeAttribute('aria-hidden');}
+ else{iconDialog.open=false;iconDialog.removeAttribute('open');iconDialog.removeAttribute('aria-modal');choresDialog.hidden=false;choresDialog.removeAttribute('aria-hidden');}
  if(iconPickerTarget){iconPickerTarget.focus();iconPickerTarget=null;}
 }
 $('icon-categories').addEventListener('click',event=>{const button=event.target.closest('[data-category]');if(button)renderIconChoices(button.dataset.category);});
@@ -311,14 +313,20 @@ $('icon-choices').addEventListener('click',event=>{
 $('icon-picker-cancel').addEventListener('click',closeIconPicker);
 function updateAddButton(){$('add-chore').disabled=$('chore-editor').children.length>=40;}
 function populateEditor(value){$('clock-format').value=value.format;$('celebrations-enabled').checked=value.celebrations;replaceChildren($('kids-editor'),value.kids.map(kidRow));$('add-kid').disabled=value.kids.length>=8;replaceChildren($('chore-editor'),value.chores.map(editorRow));$('settings-error').hidden=true;updateAddButton();}
-function readEditor(){return R.validate({version:2,format:$('clock-format').value,celebrations:$('celebrations-enabled').checked,kids:currentKids(),chores:[...$('chore-editor').children].map(row=>({id:row.dataset.id,title:row.querySelector('.edit-title').value,icon:row.querySelector('.edit-icon').value,start:row.querySelector('.edit-start').value,end:row.querySelector('.edit-end').value,kidIds:[...row.querySelectorAll('.assignments input:checked')].map(i=>i.value)}))});}
-function settingsError(error){$('settings-error').textContent=error.message;$('settings-error').hidden=false;$('settings-error').scrollIntoView({block:'nearest',behavior:'smooth'});}
+function readEditor(){
+ const editingChores=choresDialog.open,base=R.profileConfig(importDraft||state);
+ return R.validate({version:2,format:editingChores?config.format:$('clock-format').value,celebrations:editingChores?config.celebrations:$('celebrations-enabled').checked,kids:editingChores?config.kids:currentKids(),chores:editingChores?[...$('chore-editor').children].map(row=>({id:row.dataset.id,title:row.querySelector('.edit-title').value,icon:row.querySelector('.edit-icon').value,start:row.querySelector('.edit-start').value,end:row.querySelector('.edit-end').value,kidIds:[...row.querySelectorAll('.assignments input:checked')].map(i=>i.value)})):base.chores.map(ch=>({...ch,kidIds:ch.kidIds.filter(id=>currentKids().some(k=>k.id===id))}))});
+}
+function settingsError(error){const box=$(choresDialog.open?'chores-error':'settings-error');box.textContent=error.message;box.hidden=false;box.scrollIntoView({block:'nearest',behavior:'smooth'});}
+$('chores-open').addEventListener('click',openChores);
+$('discard-chores').addEventListener('click',closeChores);
+$('chores-form').addEventListener('submit',event=>event.preventDefault());
 $('settings-open').addEventListener('click',openSettings);
 function saveAndCloseSettings(){
  try{
   if(blockedStorage&&!importDraft)throw Error('First import a converted backup in the new format. Your original data has been preserved.');
   const updated=readEditor(),next=R.editProfile(importDraft||state,updated);
-  state=next;blockedStorage=false;selectState();save();tick(true);dismissCelebration();closeSettings();notify('Saved');jumpNow();
+  state=next;blockedStorage=false;selectState();save();tick(true);dismissCelebration();if(choresDialog.open)closeChores();else closeSettings();notify('Saved');jumpNow();
  }catch(error){settingsError(error);}
 }
 $('profile-open').addEventListener('click',()=>{
@@ -330,7 +338,7 @@ $('profile-list').addEventListener('click',event=>{
  state=R.validateState(state);selectState();save();dismissCelebration();closeProfile();tick(true);jumpNow();
 });
 function finishShift(nextProgress,message){progress=nextProgress;save();tick(true);closeShift();notify(message);jumpNow();}
-$('shift-open').addEventListener('click',()=>{$('shift-minutes').value='15';refreshShiftPreview();showDialog(shiftDialog);});
+$('shift-open').addEventListener('click',()=>{if(profileDialog.open)closeProfile();$('shift-minutes').value='15';refreshShiftPreview();showDialog(shiftDialog);});
 $('shift-cancel').addEventListener('click',closeShift);
 for(const event of ['input','change'])$('shift-minutes').addEventListener(event,refreshShiftPreview);
 function refreshShiftPreview(){
@@ -362,8 +370,8 @@ $('shift-undo').addEventListener('click',()=>{
 $('shift-reset').addEventListener('click',()=>{
  finishShift(R.resetShifts(config,progress,new Date()),'Original times restored for today.');
 });
-for(const dialog of [settings,shiftDialog,iconDialog,profileDialog]){
- const close=dialog===settings?saveAndCloseSettings:dialog===iconDialog?closeIconPicker:dialog===profileDialog?closeProfile:closeShift;
+for(const dialog of [settings,shiftDialog,iconDialog,profileDialog,choresDialog]){
+ const close=(dialog===settings||dialog===choresDialog)?saveAndCloseSettings:dialog===iconDialog?closeIconPicker:dialog===profileDialog?closeProfile:closeShift;
  dialog.querySelector('.close-dialog').addEventListener('click',close);
  dialog.addEventListener('cancel',event=>{event.preventDefault();close();});
  let backdropPressed=false;
@@ -482,7 +490,7 @@ document.addEventListener('click',()=>{if(document.fullscreenElement&&$('fullscr
 window.addEventListener('pagehide',()=>screenAwake.disable());
 window.addEventListener('pageshow',syncFullscreenAwake);
 
-window.addEventListener('storage',event=>{if(event.key===KEY||event.key===null){dismissCelebration();if(iconDialog.open)closeIconPicker();if(settings.open)closeSettings();if(shiftDialog.open)closeShift();if(profileDialog.open)closeProfile();load();tick(true);notify('Data changed in another tab. Unsaved editors have been closed.');}});
+window.addEventListener('storage',event=>{if(event.key===KEY||event.key===null){dismissCelebration();if(iconDialog.open)closeIconPicker();if(choresDialog.open)closeChores();if(settings.open)closeSettings();if(shiftDialog.open)closeShift();if(profileDialog.open)closeProfile();load();tick(true);notify('Data changed in another tab. Unsaved editors have been closed.');}});
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)tick(true);syncFullscreenAwake();});
 for(const placeholder of document.querySelectorAll('[data-ui-icon]'))placeholder.innerHTML=uiIcon(placeholder.dataset.uiIcon);
 load();tick(true);$('startup-warning').hidden=true;requestAnimationFrame(jumpNow);setInterval(tick,1000);

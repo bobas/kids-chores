@@ -93,20 +93,24 @@ The first earned outcome is preserved: an on-time celebration does not become a 
 
 ## Choosing chore icons
 
-In Settings, tap a chore’s picture to open a picker with 82 bundled icons. Browse Food, Hygiene, Health, Clothes, Tidying, School, Pets, Fun, and Rest, or use All to see the full set. The current icon is highlighted. Choosing an icon returns to the settings draft; canceling leaves the selection unchanged. The icon saves with the other settings when Settings closes, and Discard changes restores the original icon. All artwork works offline, in Firefox 68, and in the standalone HTML file.
+Open Chores from the menu, then tap a chore’s picture to open a picker with 82 bundled icons. Browse Food, Hygiene, Health, Clothes, Tidying, School, Pets, Fun, and Rest, or use All to see the full set. The current icon is highlighted. Choosing an icon returns to the settings draft; canceling leaves the selection unchanged. The icon saves with the other settings when Settings closes, and Discard changes restores the original icon. All artwork works offline, in Firefox 68, and in the standalone HTML file.
 
 Health includes medicine, a plaster, a stethoscope, a thermometer, an injection, a hospital, health care, a heart, lungs for breathing, a mask, a crutch, and meditation.
 
 ## Time-of-day profiles
 
-Use the time-of-day toolbar button to select Morning, Forenoon, Noon, Afternoon, or Evening. The selected profile also appears in the Chore heading. Switching is manual and the last selection is remembered. All profiles start empty, with an Add chores in Settings action. New chores in empty profiles start at 07:00, 09:00, 12:00, 15:00, or 18:00, respectively; these are suggestions, not restrictions.
+Open the hamburger menu to select Morning, Forenoon, Noon, Afternoon, or Evening. The selected profile also appears in the Chore heading. Switching is manual and the last selection is remembered. All profiles start empty, with an Add chores action. New chores in empty profiles start at 07:00, 09:00, 12:00, 15:00, or 18:00, respectively; these are suggestions, not restrictions.
 
 Children, colors, clock format, and the celebrations preference are shared. Each profile has its own chores, assignments, checkmarks, cached celebrations, daily shifts, undo, and reset. Final celebrations count only that profile. Daytime profiles use neutral celebration text; Evening keeps the bedtime wording. Daily progress expires at local midnight, including in inactive profiles.
 
-Settings edits shared children and the selected profile’s chores. Discard changes abandons all pending edits, including imports. Removing a child affects every profile; saving is blocked if any chore would lose its last assigned child.
+Settings edits shared children and preferences. The separate Chores dialog edits chores for the selected profile. Discard changes abandons all pending edits, including imports. Removing a child affects every profile; saving is blocked if any chore would lose its last assigned child.
 
 ### New backups
 
 Back up all profiles downloads `daily-profiles.json`: `version: 3`, shared `kids`, `format`, `celebrations`, `activeProfileId`, and a `profiles` object. Its fixed keys are `morning`, `forenoon`, `noon`, `afternoon`, and `evening`, each containing `chores`. Backups exclude daily progress and shifts. Import stages replacement of all profiles and children; close Settings to apply or Discard changes to cancel. Applying clears daily progress.
 
 Older single-schedule backups and stored data are not migrated automatically. Unsupported stored data remains untouched; a message explains how to import a separately converted backup. Closing Settings without importing does not overwrite it. Testing-device backups can be converted outside the app.
+
+## Toolbar and menu
+
+The toolbar has only Now, Fullscreen, and a hamburger menu. The menu directly lists the five profiles, followed by Shift times, Chores, and Settings. Chores contains titles, icons, times, and child assignments for the selected profile. Settings contains children and colors, clock format, celebrations and their preview, and all-profile backups. Both editors save valid changes when closed; Discard changes abandons their edits. Invalid values keep the relevant dialog open with an explanation.

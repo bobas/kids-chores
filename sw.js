@@ -1,4 +1,4 @@
-const CACHE='evening-garden-v23-profiles';
+const CACHE='evening-garden-v24-menu-dialogs';
 const ASSETS=['./','./index.html','./style.css','./routine.js','./app.js','./icon.svg','./manifest.webmanifest'];
 self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(ASSETS)).then(()=>self.skipWaiting()));});
 self.addEventListener('activate',event=>{event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key.startsWith('evening-garden-')&&key!==CACHE).map(key=>caches.delete(key)))).then(()=>self.clients.claim()));});

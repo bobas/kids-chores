@@ -120,3 +120,5 @@ button:focus,input:focus,select:focus,#schedule-scroll:focus{outline:3px solid #
 .shift-actions #shift-apply{width:100%}
 
 #profile-dialog{width:430px}#profile-list{display:flex;flex-direction:column;margin-top:20px}#profile-list button{margin:5px 0;text-align:left}#profile-list [aria-pressed=true]{background:var(--green);color:white}.empty-profile{padding:24px;font-size:20px}.chore-column-head{font-size:23px}@media(max-width:450px){.top-actions{max-width:220px}.top-actions .icon-button{width:39px;padding:6px}}
+
+.menu-section-label{font-size:15px;color:var(--muted);margin:20px 0 0}.menu-actions{display:flex;flex-direction:column;border-top:1px solid var(--line);margin-top:16px;padding-top:12px}.menu-actions button{margin:5px 0;text-align:left;width:100%}#chores-dialog .dialog-heading h2{font-size:27px}@media(max-width:450px){.top-actions{max-width:208px}.top-actions .icon-button{display:inline-flex;align-items:center;justify-content:center;width:40px}}
