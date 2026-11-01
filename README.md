@@ -118,3 +118,9 @@ The toolbar has only Now, Fullscreen, and a hamburger menu. The menu directly li
 ## Trophy for completing a profile
 
 When a child finishes all their assigned chores by the latest end time in the selected profile, they earn a trophy even if the last checkbox belongs to a chore whose own deadline has passed. Completion order does not matter. Today’s shifted times apply; finishing exactly at the final deadline still counts as on time. Individual chores before full completion retain their own deadlines. A previously cached ordinary celebration or turtle does not prevent earning the finale trophy. Earned trophies can be replayed like other daily celebrations.
+
+## Contextual chore clocks and compact rows
+
+Clock faces, exact start/end times, and duration are shown only for running chores, the nearest future unfinished chore, and past chores that any assigned child has not finished. All tied next-start chores show their details. Early-completed future chores are skipped when selecting the next chore; running chores retain their details until their end even if completed. Overdue unfinished chores use a pale-red clock sector. The time scale on the left remains available.
+
+Timing details fade and slide in or out. Rows fit their actual visible content and duration, so short clockless chores are compact while wrapped titles, checkboxes, and visible clocks have enough room. Row height changes animate together with neighbouring rows, time labels, and the Now line. Chores have larger illustrations in a separate left column, with their titles beside them; content is vertically centered. Reduced-motion preferences disable these transitions.

@@ -209,19 +209,84 @@ function timelineTicks(){
 }
 function done(kidId,choreId){return !!progress.done[R.completionKey(kidId,choreId)];}
 function assigned(kidId){return config.chores.filter(c=>c.kidIds.includes(kidId));}
+let timingProfile='',renderingTimeline=false;
+let resizeTimer,sizingStamp='';
+function updateChoreTimings(now){
+ const timings=R.choreTimings(todayConfig,progress,now);
+ for(const panel of document.querySelectorAll('.chore-timing')){
+  const kind=timings[panel.dataset.id],visible=kind&&kind!=='hidden';
+  const wasVisible=panel.classList.contains('timing-visible');
+  if(wasVisible&&!visible){panel.dataset.sizingClock='true';setTimeout(()=>{delete panel.dataset.sizingClock;if(document.body.contains(panel))fitTimeline(R.timeOfDay(new Date()));},340);}
+  if(visible)delete panel.dataset.sizingClock;
+  panel.classList.toggle('timing-visible',!!visible);panel.classList.toggle('timing-overdue',kind==='overdue');
+  panel.setAttribute('aria-hidden',String(!visible));panel.dataset.timing=kind||'hidden';
+ }
+ if(!renderingTimeline)fitTimeline(now);
+}
+const timelineMarks={ticks:new Map(),lines:new Map(),gaps:new Map()};
+function updateTimelineMarks(){
+ const ticks=timelineTicks(),desired=[];
+ function reconcile(map,items,parent){
+  const used=new Set();
+  for(const item of items){
+   used.add(item.key);let node=map.get(item.key);
+   if(!node){node=document.createElement(item.tag||'div');node.style.top=item.top+'px';map.set(item.key,node);}
+   node.className=item.className;node.innerHTML=item.html||'';
+   if(item.hidden)node.setAttribute('aria-hidden','true');
+   if(node.parentNode!==parent)parent.appendChild(node);
+   desired.push({node,top:item.top});
+  }
+  for(const [key,node] of map)if(!used.has(key)){node.remove();map.delete(key);}
+ }
+ reconcile(timelineMarks.ticks,ticks.map(t=>({key:t.m,top:t.y,className:'time-tick'+(t.boundary?' major':''),html:digits(timeString(t.m))})),$('time-axis'));
+ reconcile(timelineMarks.lines,ticks.map(t=>({key:t.m,top:t.y,tag:'i',className:'grid-line',hidden:true})),$('kid-columns'));
+ reconcile(timelineMarks.gaps,layout.segments.filter(g=>!g.active&&g.end-g.start>=30).map(g=>({key:g.start+'-'+g.end,top:g.top+g.height/2,className:'gap-fold',hidden:true,html:'↕ '+(Math.floor((g.end-g.start)/60)?Math.floor((g.end-g.start)/60)+' h ':'')+((g.end-g.start)%60?(g.end-g.start)%60+' min':'')})),$('kid-columns'));
+ void $('timeline').offsetHeight;
+ for(const item of desired)item.node.style.top=item.top+'px';
+}
+function fitTimeline(now){
+ if(!config.chores.length)return;
+ const rows=[...$('kid-columns').querySelectorAll('.routine-row')];if(!rows.length)return;
+ const stamp=state.activeProfileId+'|'+config.format+'|'+innerWidth+'|'+rows[0].querySelector('.shared-chore-content').getBoundingClientRect().width+'|'+JSON.stringify(todayConfig.chores)+'|'+rows.map(row=>{const p=row.querySelector('.chore-timing');return row.dataset.id+':'+(p.classList.contains('timing-visible')||p.dataset.sizingClock==='true');}).join(',');
+ if(stamp===sizingStamp)return;sizingStamp=stamp;
+ const measure=document.createElement('div');measure.className='shared-chore';
+ measure.style.cssText='position:fixed;left:-10000px;top:0;visibility:hidden;pointer-events:none;border:0;margin:0;padding:0;width:2000px;';
+ const clones=rows.map(row=>{
+  const content=row.querySelector('.shared-chore-content'),clone=content.cloneNode(true),panel=clone.querySelector('.chore-timing'),original=content.querySelector('.chore-timing');
+  clone.style.cssText='position:static;flex:none;width:'+content.getBoundingClientRect().width+'px;';
+  const show=original.classList.contains('timing-visible')||original.dataset.sizingClock==='true';
+  panel.classList.toggle('timing-visible',show);panel.style.transition='none';panel.style.maxHeight=show?'none':'0';if(!show)panel.style.display='none';
+  measure.appendChild(clone);return {id:row.dataset.id,clone};
+ });
+ document.body.appendChild(measure);
+ const heights=Object.create(null);for(const item of clones)heights[item.id]=Math.ceil(item.clone.getBoundingClientRect().height);
+ measure.remove();
+ const next=R.timeline(todayConfig,heights);
+ const changed=!layout||next.height!==layout.height||next.rows.some((row,i)=>!layout.rows[i]||row.height!==layout.rows[i].height||row.top!==layout.rows[i].top);
+ if(!changed)return;
+ layout=next;$('timeline').style.height=layout.height+'px';
+ for(const row of rows){const size=layout.rows.find(item=>item.id===row.dataset.id);row.style.top=(size.top+4)+'px';row.style.height=(size.height-8)+'px';}
+ updateTimelineMarks();updateNow(now);
+}
+window.addEventListener('resize',()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(()=>fitTimeline(R.timeOfDay(new Date())),120);});
 function render(now){
+ renderingTimeline=true;sizingStamp='';
+ const previous=Object.create(null),timings=R.choreTimings(todayConfig,progress,now),sameProfile=timingProfile===state.activeProfileId,oldTimelineHeight=sameProfile&&layout?getComputedStyle($('timeline')).height:null;
+ const previousRows=Object.create(null);if(sameProfile)for(const row of document.querySelectorAll('.routine-row')){const style=getComputedStyle(row);previousRows[row.dataset.id]={top:style.top,height:style.height};}
+ if(!sameProfile){for(const map of Object.values(timelineMarks)){for(const node of map.values())node.remove();map.clear();}}
+ if(timingProfile===state.activeProfileId)for(const panel of document.querySelectorAll('.chore-timing'))previous[panel.dataset.id]={visible:panel.classList.contains('timing-visible'),late:panel.classList.contains('timing-overdue')};
+ timingProfile=state.activeProfileId;
  layout=R.timeline(todayConfig);const focused=document.activeElement&&document.activeElement.dataset&&document.activeElement.dataset.key;
- $('schedule').style.setProperty('--kid-count',config.kids.length);$('timeline').style.height=`${layout.height}px`;
+ $('schedule').style.setProperty('--kid-count',config.kids.length);$('timeline').style.height=oldTimelineHeight||`${layout.height}px`;
  $('column-heads').innerHTML='<div class="axis-head" aria-hidden="true">'+uiIcon('clock')+'</div><div class="chore-column-head">Chore · '+escape(R.PROFILE_NAMES[state.activeProfileId])+'</div>'+config.kids.map((kid,i)=>{const chores=assigned(kid.id),n=chores.filter(c=>done(kid.id,c.id)).length;return `<div class="kid-head" style="${kidStyle(kid,i)}"><div class="kid-name-wrap"><div class="kid-name">${escape(kid.name)}</div><div class="kid-progress" role="progressbar" aria-label="${escape(kid.name)}’s chores" aria-valuemin="0" aria-valuemax="${chores.length||1}" aria-valuenow="${n}" aria-valuetext="${n} of ${chores.length}"><i style="width:${chores.length?n/chores.length*100:0}%"></i></div><span class="kid-score">${n}/${chores.length}${chores.length&&n===chores.length?uiIcon('check'):''}</span></div></div>`;}).join('');
  $('profile-open').title='Menu: '+R.PROFILE_NAMES[state.activeProfileId];$('profile-open').setAttribute('aria-label','Open menu: '+R.PROFILE_NAMES[state.activeProfileId]);
- if(!config.chores.length){$('time-axis').textContent='';$('kid-columns').innerHTML='<div class="empty-profile"><p>This profile has no chores yet.</p><button type="button" class="primary-button" id="empty-add">Add chores</button></div>';$('empty-add').addEventListener('click',openChores);$('timeline').style.height='220px';$('profile-open').title='Menu: '+R.PROFILE_NAMES[state.activeProfileId];$('profile-open').setAttribute('aria-label','Open menu: '+R.PROFILE_NAMES[state.activeProfileId]);return;}
- const ticks=timelineTicks();$('time-axis').innerHTML=ticks.map(t=>`<div class="time-tick${t.boundary?' major':''}" style="top:${t.y}px">${digits(timeString(t.m))}</div>`).join('');
- const lines=ticks.map(t=>`<i class="grid-line" aria-hidden="true" style="top:${t.y}px"></i>`).join('');
- const gaps=layout.segments.filter(s=>!s.active&&s.end-s.start>=30).map(s=>`<span class="gap-fold" aria-hidden="true" style="top:${s.top+s.height/2}px">↕ ${Math.floor((s.end-s.start)/60)?`${Math.floor((s.end-s.start)/60)}h `:''}${(s.end-s.start)%60?`${(s.end-s.start)%60}m`:''}</span>`).join('');
- $('kid-columns').innerHTML=lines+gaps+layout.rows.map(row=>{
-  const chore=todayConfig.chores.find(c=>c.id===row.id),complete=chore.kidIds.every(k=>done(k,chore.id)),state=R.status(chore,now,complete);
-  return `<div class="routine-row ${state}" data-id="${escape(chore.id)}" style="top:${row.top+4}px;height:${row.height-8}px"><div class="shared-chore"><div class="shared-chore-content"><span class="chore-heading"><span class="chore-icon" aria-hidden="true">${iconMarkup(chore.icon)}</span><span class="chore-title">${escape(chore.title)}</span></span>${rangeClock(chore)}</div></div>${config.kids.map((kid,i)=>{const included=chore.kidIds.includes(kid.id),checked=included&&done(kid.id,chore.id);return `<div class="kid-cell${included?'':' unassigned'}${checked?' checked':''}" style="${kidStyle(kid,i)}">${included?`<label class="check-target"><input class="child-check" type="checkbox" data-kid="${escape(kid.id)}" data-id="${escape(chore.id)}" data-key="${escape(R.completionKey(kid.id,chore.id))}"${checked?' checked':''} aria-label="${escape(kid.name)}: ${escape(chore.title)}, ${escape(formatTime(chore.start))} to ${escape(formatTime(chore.end))}"></label>`:`<span class="not-assigned" aria-label="${escape(kid.name)}: not assigned">—</span>`}</div>`;}).join('')}</div>`;
+ if(!config.chores.length){for(const map of Object.values(timelineMarks)){for(const node of map.values())node.remove();map.clear();}$('time-axis').textContent='';$('kid-columns').innerHTML='<div class="empty-profile"><p>This profile has no chores yet.</p><button type="button" class="primary-button" id="empty-add">Add chores</button></div>';$('empty-add').addEventListener('click',openChores);$('timeline').style.height='220px';$('profile-open').title='Menu: '+R.PROFILE_NAMES[state.activeProfileId];$('profile-open').setAttribute('aria-label','Open menu: '+R.PROFILE_NAMES[state.activeProfileId]);renderingTimeline=false;return;}
+ $('kid-columns').innerHTML=layout.rows.map(row=>{
+  const chore=todayConfig.chores.find(c=>c.id===row.id),complete=chore.kidIds.every(k=>done(k,chore.id)),state=R.status(chore,now,complete),timing=previous[chore.id]||{visible:timings[chore.id]!=='hidden',late:timings[chore.id]==='overdue'};
+  return `<div class="routine-row ${state}" data-id="${escape(chore.id)}" style="top:${previousRows[row.id]?previousRows[row.id].top:(row.top+4)+'px'};height:${previousRows[row.id]?previousRows[row.id].height:(row.height-8)+'px'}"><div class="shared-chore"><div class="shared-chore-content"><span class="chore-icon" aria-hidden="true">${iconMarkup(chore.icon)}</span><span class="chore-heading"><span class="chore-title">${escape(chore.title)}</span></span><span class="chore-timing${timing.visible?' timing-visible':''}${timing.late?' timing-overdue':''}" data-id="${escape(chore.id)}" aria-hidden="${!timing.visible}">${rangeClock(chore)}</span></div></div>${config.kids.map((kid,i)=>{const included=chore.kidIds.includes(kid.id),checked=included&&done(kid.id,chore.id);return `<div class="kid-cell${included?'':' unassigned'}${checked?' checked':''}" style="${kidStyle(kid,i)}">${included?`<label class="check-target"><input class="child-check" type="checkbox" data-kid="${escape(kid.id)}" data-id="${escape(chore.id)}" data-key="${escape(R.completionKey(kid.id,chore.id))}"${checked?' checked':''} aria-label="${escape(kid.name)}: ${escape(chore.title)}, ${escape(formatTime(chore.start))} to ${escape(formatTime(chore.end))}"></label>`:`<span class="not-assigned" aria-label="${escape(kid.name)}: not assigned">—</span>`}</div>`;}).join('')}</div>`;
  }).join('');
+ // Commit the previous visibility before changing it, so rebuilt rows can also animate.
+ void $('kid-columns').offsetWidth;updateChoreTimings(now);renderingTimeline=false;fitTimeline(now);updateTimelineMarks();
  if(focused){const previous=[...document.querySelectorAll('.child-check')].find(b=>b.dataset.key===focused);if(previous)previous.focus({preventScroll:true});}
 }
 function updateNow(now){if(!layout||!config.chores.length){$('now-marker').hidden=true;return;}const marker=$('now-marker');marker.hidden=now<layout.start||now>layout.end;if(!marker.hidden){marker.style.top=`${R.position(layout,now)}px`;$('now-label').innerHTML=`NOW<br>${digits(timeString(now))}`;}}
@@ -229,7 +294,7 @@ function tick(force=false){
  const date=new Date(),now=R.timeOfDay(date),day=R.dayKey(date);if(progress.day!==day){progress=R.freshProgress(date);save();force=true;}
  todayConfig=R.effectiveConfig(config,progress,date);
  const time=timeString(now);$('digital-time').innerHTML=digits(time);const clock=$('main-clock');if(!clock.firstChild)clock.innerHTML=clockSvg(date.getHours(),date.getMinutes());clock.setAttribute('role','img');clock.setAttribute('aria-label',`Current time ${formatTime(time)}`);clock.querySelector('.hour-hand').setAttribute('transform',`rotate(${date.getHours()%12*30+date.getMinutes()*.5+date.getSeconds()/120} 100 100)`);clock.querySelector('.minute-hand').setAttribute('transform',`rotate(${date.getMinutes()*6+date.getSeconds()*.1} 100 100)`);
- const stamp=`${day}-${time}`;if(force||stamp!==renderStamp){render(now);renderStamp=stamp;if(shiftDialog.open)refreshShiftPreview();}updateNow(now);
+ const stamp=`${day}-${time}`;if(force||stamp!==renderStamp){render(now);renderStamp=stamp;if(shiftDialog.open)refreshShiftPreview();}updateNow(now);updateChoreTimings(now);
  const active=todayConfig.chores.some(c=>R.onTime(c,now)&&c.kidIds.some(k=>!done(k,c.id))),next=todayConfig.chores.find(c=>R.minutes(c.start)>now&&c.kidIds.some(k=>!done(k,c.id))),left=next?Math.ceil(R.minutes(next.start)-now):0;$('starts-in').textContent=!active&&next?`${formatTime(next.start)} · ${left>=60?`${Math.floor(left/60)}h `:''}${left%60}m`:'';
 }
 function jumpNow(){if(!layout||!config.chores.length)return;const now=R.timeOfDay(new Date()),target=(now<layout.start?R.minutes(todayConfig.chores[0].start):(now>layout.end?R.minutes(todayConfig.chores[todayConfig.chores.length-1].start):now));$('schedule-scroll').scrollTo({top:Math.max(0,R.position(layout,target)-90),behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});}

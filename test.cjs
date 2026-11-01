@@ -279,3 +279,33 @@ test('a cached ordinary turtle upgrades to an earned trophy without redrawing th
  const replay=R.assignCelebration(c,upgrade.progress,'child-1','supper',{grand:true,late:true},d,()=>{throw Error('Do not redraw');});assert.deepEqual(replay.celebration,upgrade.celebration);
  const tooLate=R.assignCelebration(c,first.progress,'child-1','supper',{grand:true,late:true},d);assert.equal(tooLate.celebration.late,true);
 });
+
+test('clock details show current, next unfinished and overdue incomplete chores only',()=>{
+ const c=R.defaults(),p=R.freshProgress(date());
+ const view=R.choreTimings(c,p,19*60+5);
+ assert.equal(view.supper,'overdue');assert.equal(view.pajamas,'overdue');assert.equal(view.teeth,'next');assert.equal(view.bed,'hidden');
+ p.done['child-1:supper']={at:date().toISOString()};assert.equal(R.choreTimings(c,p,1145).supper,'overdue');
+ p.done['child-2:supper']={at:date().toISOString()};assert.equal(R.choreTimings(c,p,1145).supper,'hidden');
+ for(const kid of c.kids)p.done[R.completionKey(kid.id,'teeth')]={at:date().toISOString()};
+ assert.equal(R.choreTimings(c,p,1145).teeth,'hidden');assert.equal(R.choreTimings(c,p,1145).prayer,'next');
+ assert.equal(R.choreTimings(c,p,1155).teeth,'current');assert.equal(R.choreTimings(c,p,1170).teeth,'hidden');
+});
+test('clock boundaries, tied next chores and shifted schedules use actual profile times',()=>{
+ const c=R.defaults(),p=R.freshProgress(date());
+ assert.equal(R.choreTimings(c,p,1080).supper,'current');assert.equal(R.choreTimings(c,p,1125).supper,'overdue');
+ c.chores[0].kidIds=['child-1'];c.chores[1].kidIds=['child-2'];c.chores[1].start='18:00';
+ assert.equal(R.choreTimings(c,p,1079).supper,'next');assert.equal(R.choreTimings(c,p,1079).pajamas,'next');
+ p.offsets={supper:30};const shifted=R.effectiveConfig(c,p,date());assert.equal(R.choreTimings(shifted,p,1125).supper,'current');
+ assert.deepEqual({...R.choreTimings({...c,chores:[]},p,0)},{});
+});
+
+test('measured timeline fits compact rows, clocks and long titles while mapping time continuously',()=>{
+ const c=R.defaults(),heights={};for(const ch of c.chores)heights[ch.id]=96;
+ let l=R.timeline(c,heights);const short=l.rows.find(r=>r.id==='toilet'),long=l.rows.find(r=>r.id==='supper');
+ assert.ok(short.height<120);assert.ok(long.height>short.height);assert.ok(l.rows.every(r=>r.height>=104));
+ heights.toilet=174;heights.prayer=260;const expanded=R.timeline(c,heights);
+ assert.ok(expanded.rows.find(r=>r.id==='toilet').height>=182);assert.ok(expanded.rows.find(r=>r.id==='prayer').height>=268);
+ assert.equal(R.position(expanded,expanded.end),expanded.height);
+ for(let i=1;i<expanded.rows.length;i++)assert.ok(expanded.rows[i].top>=expanded.rows[i-1].top+expanded.rows[i-1].height);
+ let previous=-1;for(let t=expanded.start;t<=expanded.end;t+=.25){const y=R.position(expanded,t);assert.ok(y>=previous);previous=y;}
+});

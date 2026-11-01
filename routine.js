@@ -128,10 +128,18 @@ function resetShifts(config,progress,date=new Date()){
 }
 function onTime(chore,now){return now>=minutes(chore.start)&&now<minutes(chore.end);}
 function isLate(chore,now){return now>minutes(chore.end);}
+function choreTimings(config,progress,now){
+ const complete=ch=>ch.kidIds.every(kid=>!!progress.done[completionKey(kid,ch.id)]);
+ const upcoming=config.chores.filter(ch=>minutes(ch.start)>now&&!complete(ch));
+ const nextStart=upcoming.length?Math.min(...upcoming.map(ch=>minutes(ch.start))):null;
+ const timings=Object.create(null);
+ for(const chore of config.chores)timings[chore.id]=onTime(chore,now)?'current':now>=minutes(chore.end)&&!complete(chore)?'overdue':minutes(chore.start)===nextStart&&!complete(chore)?'next':'hidden';
+ return timings;
+}
 function status(chore,now,done){return done?'done':now<minutes(chore.start)?'upcoming':onTime(chore,now)?'current':'past';}
 // Chronological rows share a compressed time axis. Overlapping chores are
 // stacked inside one time block so that every chore still appears just once.
-function timeline(config){
+function timeline(config,contentHeights=null){
  if(!config.chores.length)return {start:0,end:1440,segments:[],rows:[],height:0};
  const chores=[...config.chores].sort((a,b)=>minutes(a.start)-minutes(b.start));
  const start=Math.max(0,Math.floor((minutes(chores[0].start)-15)/5)*5),end=Math.min(1440,Math.ceil((Math.max(...chores.map(c=>minutes(c.end)))+5)/5)*5);
@@ -139,7 +147,7 @@ function timeline(config){
  for(const chore of chores){const a=minutes(chore.start),b=minutes(chore.end),last=groups[groups.length-1];if(last&&a<last.end){last.chores.push(chore);last.end=Math.max(last.end,b);}else groups.push({start:a,end:b,chores:[chore]});}
  const rows=[],segments=[];let y=0,cursor=start;
  function addGap(a,b){if(b<=a)return;const height=Math.min(130,30+25*Math.log1p((b-a)/5));segments.push({start:a,end:b,top:y,height,active:false});y+=height;}
- for(const group of groups){addGap(cursor,group.start);const top=y;for(const chore of group.chores){const duration=minutes(chore.end)-minutes(chore.start),height=Math.max(190,85+Math.ceil(chore.title.length/10)*30,130+48*Math.log1p(duration/5));rows.push({id:chore.id,top:y,height});y+=height;}segments.push({start:group.start,end:group.end,top,height:y-top,active:true});cursor=group.end;}
+ for(const group of groups){addGap(cursor,group.start);const top=y;for(const chore of group.chores){const duration=minutes(chore.end)-minutes(chore.start),height=contentHeights?Math.max(74,(contentHeights[chore.id]||0)+8,64+40*Math.log1p(duration/5)):Math.max(190,85+Math.ceil(chore.title.length/10)*30,130+48*Math.log1p(duration/5));rows.push({id:chore.id,top:y,height});y+=height;}segments.push({start:group.start,end:group.end,top,height:y-top,active:true});cursor=group.end;}
  addGap(cursor,end);return {start,end,segments,rows,height:y};
 }
 function position(layout,time){
@@ -194,6 +202,6 @@ function importState(input,date=new Date()){
  const next=validateState(input,date);for(const id of PROFILE_IDS)next.profiles[id].progress=freshProgress(date);return next;
 }
 
-const api={PROFILE_IDS,PROFILE_NAMES,PROFILE_START,profileConfig,freshState,validateState,editProfile,exportState,importState,CELEBRATION_COUNT,LATE_REMINDER_COUNT,makeCelebration,celebrationFlags,assignCelebration,celebrationRandom,KID_COLORS,kidTheme,ICON_CATEGORIES,ICONS,defaults,minutes,dayKey,timeOfDay,validate,completionKey,freshProgress,cleanProgress,effectiveConfig,shiftRemaining,undoShift,resetShifts,onTime,isLate,status,timeline,position,rangeSector};
+const api={PROFILE_IDS,PROFILE_NAMES,PROFILE_START,profileConfig,freshState,validateState,editProfile,exportState,importState,CELEBRATION_COUNT,LATE_REMINDER_COUNT,makeCelebration,celebrationFlags,assignCelebration,celebrationRandom,KID_COLORS,kidTheme,ICON_CATEGORIES,ICONS,defaults,minutes,dayKey,timeOfDay,validate,completionKey,freshProgress,cleanProgress,effectiveConfig,shiftRemaining,undoShift,resetShifts,onTime,isLate,choreTimings,status,timeline,position,rangeSector};
 if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.Routine=api;
 })(typeof window!=='undefined'?window:globalThis);

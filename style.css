@@ -128,3 +128,30 @@ button:focus,input:focus,select:focus,#schedule-scroll:focus{outline:3px solid #
 .profile-tile .app-icon{width:44px;height:44px;flex-shrink:0}.profile-tile span{font-size:17px;font-weight:600;line-height:1.2;margin-top:9px;max-width:100%;overflow-wrap:break-word}
 #profile-list .profile-tile[aria-pressed=true]{border-color:var(--green);background:#dce8ce;box-shadow:inset 0 0 0 1px var(--green)}
 @media(max-width:450px){#profile-list{gap:6px}#profile-list .profile-tile{min-height:102px;padding:10px 3px}.profile-tile span{font-size:16px}}
+
+/* Timing details fade and slide while the row layout follows their visible content. */
+.shared-chore-content{display:flex;gap:0}.shared-chore-content>.chore-heading{flex:1;min-width:0}
+.chore-timing{display:flex;flex:0 0 auto;width:0;margin-left:0;overflow:hidden;opacity:0;visibility:hidden;transform:translateX(10px);transition:width .32s ease,margin-left .32s ease,opacity .22s ease,transform .32s ease,visibility 0s linear .32s}
+.chore-timing>.range-clock{width:165px;min-width:165px;flex:0 0 auto}
+.chore-timing.timing-visible{width:165px;margin-left:10px;opacity:1;visibility:visible;transform:translateX(0);transition-delay:0s}
+.chore-timing .range-sector{fill:#b8d9bb;transition:fill .3s ease}.chore-timing.timing-overdue .range-sector{fill:#e5b4ad}
+@media(max-width:700px){.chore-timing>.range-clock{width:150px;min-width:150px}.chore-timing.timing-visible{width:150px;margin-left:6px}}
+@media(prefers-reduced-motion:reduce){.chore-timing,.chore-timing .range-sector{transition:none!important}}
+
+/* Row space follows the actual title, controls and currently visible timing details. */
+.shared-chore-content{min-height:0}.check-target{min-height:64px}
+.chore-timing{max-height:0;transition:width .32s ease,margin-left .32s ease,max-height .32s ease,opacity .22s ease,transform .32s ease,visibility 0s linear .32s}
+.chore-timing.timing-visible{max-height:240px}
+
+/* One coordinated resize transition for cards, the time scale and the Now line. */
+.routine-row{transition:top .32s ease,height .32s ease}
+#timeline{transition:height .32s ease}.time-tick,.grid-line,.gap-fold,#now-marker{transition:top .32s ease}
+:root{--chore-width:430px}
+.shared-chore-content>.chore-icon{display:flex;align-items:center;justify-content:center;flex:0 0 74px;width:74px;height:60px;padding-right:13px;margin-right:13px;border-right:1px solid #d8dfd1;line-height:1}
+.shared-chore-content>.chore-icon>.app-icon{width:60px;height:60px}
+@media(max-width:700px){:root{--chore-width:390px}.shared-chore-content>.chore-icon{flex-basis:64px;width:64px;height:52px;padding-right:11px;margin-right:10px}.shared-chore-content>.chore-icon>.app-icon{width:52px;height:52px}}
+@media(prefers-reduced-motion:reduce){.routine-row,#timeline,.time-tick,.grid-line,.gap-fold,#now-marker{transition:none!important}}
+
+.routine-row{clip-path:inset(0 round 13px)}
+
+.shared-chore{justify-content:center}
