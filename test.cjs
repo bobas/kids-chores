@@ -177,10 +177,17 @@ test('new local dates clear rewards and draw fresh daily celebrations',()=>{
  assert.equal(R.cleanProgress(first.progress,c,tomorrow).celebrations,undefined);
  const next=R.assignCelebration(c,first.progress,'child-1','supper',{},tomorrow,()=>.8);assert.equal(next.progress.day,R.dayKey(tomorrow));assert.equal(next.celebration.theme,16);assert.notDeepEqual(next.celebration,first.celebration);
 });
-test('late reminders and earned completion celebrations also replay their original choice',()=>{
- const c=R.defaults(),d=new Date(2026,9,23,21),first=R.assignCelebration(c,R.freshProgress(d),'child-1','supper',{late:true,grand:true,everyone:true},d,()=>.7);
- const replay=R.assignCelebration(c,first.progress,'child-1','supper',{late:false,grand:false,everyone:false},d,()=>.1);
- assert.deepEqual(replay.celebration,first.celebration);assert.equal(replay.celebration.reminder,4);assert.equal(replay.celebration.grand,true);assert.equal(replay.celebration.everyone,true);assert.equal(replay.celebration.late,true);
+test('late reminders replay while still late and earned trophies remain replayable',()=>{
+ const c=R.defaults(),d=new Date(2026,9,23,21);
+ for(const late of [true,false]){
+  const first=R.assignCelebration(c,R.freshProgress(d),'child-1','supper',{late,grand:true,everyone:true},d,()=>.7);
+  const replay=R.assignCelebration(c,first.progress,'child-1','supper',{late:true,grand:false,everyone:false},d,()=>{throw Error('Do not redraw');});
+  assert.deepEqual(replay.celebration,first.celebration);
+  assert.equal(replay.celebration.reminder,4);
+  assert.equal(replay.celebration.grand,true);
+  assert.equal(replay.celebration.everyone,true);
+  assert.equal(replay.celebration.late,late);
+ }
 });
 test('shifts, undo and settings cleanup preserve assigned daily celebrations',()=>{
  const c=R.defaults(),d=new Date(2026,9,23,19),first=R.assignCelebration(c,R.freshProgress(d),'child-1','supper',{},d,()=>.4),key=R.completionKey('child-1','supper');
@@ -377,4 +384,66 @@ test('checkbox locks survive row replacement and stay scoped to the profile and 
  assert.equal(h.boxes[0].disabled,true);
  h.advance(2000);
  assert.equal(h.boxes[0].disabled,false);
+});
+
+
+test('uncheck, shift, reload and recheck upgrade a turtle only when the new deadline is met',()=>{
+ const config=R.defaults(),date=new Date(2026,9,23,18,50);
+ const kid='child-1',chore='supper',key=R.completionKey(kid,chore);
+ for(const offset of [4,5,15]){
+  const progress=R.freshProgress(date);
+  progress.done[key]={at:date.toISOString()};
+  const first=R.assignCelebration(config,progress,kid,chore,R.celebrationFlags(config,progress,kid,chore,R.timeOfDay(date)),date,()=>.4);
+  assert.equal(first.celebration.late,true);
+  delete first.progress.done[key];
+  const shifted=R.shiftRemaining(config,first.progress,offset,date).progress;
+  const reloaded=R.cleanProgress(JSON.parse(JSON.stringify(shifted)),config,date);
+  reloaded.done[key]={at:date.toISOString()};
+  const today=R.effectiveConfig(config,reloaded,date);
+  const flags=R.celebrationFlags(today,reloaded,kid,chore,R.timeOfDay(date));
+  const before=JSON.stringify(reloaded);
+  const replay=R.assignCelebration(config,reloaded,kid,chore,flags,date,()=>{throw Error('Do not redraw');});
+  assert.equal(replay.celebration.late,offset<5);
+  assert.equal(replay.celebration.grand,false);
+  assert.equal(replay.celebration.theme,first.celebration.theme);
+  assert.equal(replay.celebration.seed,first.celebration.seed);
+  assert.equal(JSON.stringify(reloaded),before);
+  assert.equal(first.celebration.late,true);
+  const saved=R.cleanProgress(JSON.parse(JSON.stringify(replay.progress)),config,date);
+  assert.deepEqual(saved.celebrations[key],replay.celebration);
+ }
+});
+test('a corrected final turtle becomes an ordinary celebration while another chore remains unfinished',()=>{
+ const config=R.defaults(),date=new Date(2026,9,23,21),kid='child-1';
+ const key=R.completionKey(kid,'supper'),progress=R.freshProgress(date);
+ for(const chore of config.chores)progress.done[R.completionKey(kid,chore.id)]={at:date.toISOString()};
+ const first=R.assignCelebration(config,progress,kid,'supper',R.celebrationFlags(config,progress,kid,'supper',R.timeOfDay(date)),date,()=>.3);
+ assert.equal(first.celebration.grand,true);
+ assert.equal(first.celebration.late,true);
+ delete first.progress.done[key];
+ delete first.progress.done[R.completionKey(kid,'bed')];
+ const shifted=R.shiftRemaining(config,first.progress,180,date).progress;
+ shifted.done[key]={at:date.toISOString()};
+ const today=R.effectiveConfig(config,shifted,date);
+ const flags=R.celebrationFlags(today,shifted,kid,'supper',R.timeOfDay(date));
+ const replay=R.assignCelebration(config,shifted,kid,'supper',flags,date,()=>{throw Error('Do not redraw');});
+ assert.equal(replay.celebration.late,false);
+ assert.equal(replay.celebration.grand,false);
+ assert.equal(replay.celebration.theme,first.celebration.theme);
+});
+test('a final turtle becomes a trophy after unchecking and extending the profile deadline',()=>{
+ const config=R.defaults(),date=new Date(2026,9,23,21),kid='child-1';
+ const key=R.completionKey(kid,'bed'),progress=R.freshProgress(date);
+ for(const chore of config.chores)progress.done[R.completionKey(kid,chore.id)]={at:date.toISOString()};
+ const first=R.assignCelebration(config,progress,kid,'bed',R.celebrationFlags(config,progress,kid,'bed',R.timeOfDay(date)),date,()=>.6);
+ assert.equal(first.celebration.late,true);
+ delete first.progress.done[key];
+ const shifted=R.shiftRemaining(config,first.progress,60,date).progress;
+ shifted.done[key]={at:date.toISOString()};
+ const today=R.effectiveConfig(config,shifted,date);
+ const flags=R.celebrationFlags(today,shifted,kid,'bed',R.timeOfDay(date));
+ const replay=R.assignCelebration(config,shifted,kid,'bed',flags,date,()=>{throw Error('Do not redraw');});
+ assert.equal(replay.celebration.late,false);
+ assert.equal(replay.celebration.grand,true);
+ assert.equal(replay.celebration.seed,first.celebration.seed);
 });

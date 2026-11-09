@@ -75,8 +75,12 @@ function assignCelebration(config,progress,kidId,choreId,flags={},date=new Date(
  if(!chore)throw Error('A celebration must belong to an assigned child’s chore.');
  const next=cleanProgress(progress,config,date),key=completionKey(kidId,choreId);
  if(!next.celebrations)next.celebrations=Object.create(null);
- if(!next.celebrations[key])next.celebrations[key]=makeCelebration(flags,random);
- else if(flags.grand&&(!next.celebrations[key].grand||next.celebrations[key].late&&!flags.late))Object.assign(next.celebrations[key],{grand:true,everyone:!!flags.everyone,late:!!flags.late});
+ const saved=next.celebrations[key];
+ if(!saved){
+  next.celebrations[key]=makeCelebration(flags,random);
+ }else if((saved.late&&!flags.late)||(flags.grand&&!saved.grand)){
+  Object.assign(saved,{grand:!!flags.grand,everyone:!!flags.everyone,late:!!flags.late});
+ }
  return {progress:next,celebration:next.celebrations[key]};
 }
 function celebrationRandom(seed){
