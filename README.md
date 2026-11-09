@@ -124,3 +124,9 @@ When a child finishes all their assigned chores by the latest end time in the se
 Clock faces, exact start/end times, and duration are shown only for running chores, the nearest future unfinished chore, and past chores that any assigned child has not finished. All tied next-start chores show their details. Early-completed future chores are skipped when selecting the next chore; running chores retain their details until their end even if completed. Overdue unfinished chores use a pale-red clock sector. The time scale on the left remains available.
 
 Timing details fade and slide in or out. Rows fit their actual visible content and duration, so short clockless chores are compact while wrapped titles, checkboxes, and visible clocks have enough room. Row height changes animate together with neighbouring rows, time labels, and the Now line. Chores have larger illustrations in a separate left column, with their titles beside them; content is vertically centered. Reduced-motion preferences disable these transitions.
+
+## Responsive checkbox feedback
+
+Checking a chore updates its checkbox, the child’s progress and the affected row in place. Unchanged chores reuse their measured sizes. The checked state gets a rendered frame before the celebration opens. Switching profiles, opening a dialog or hiding the page cancels a celebration that has not opened yet.
+
+After checking or unchecking, that checkbox is locked for two seconds. A celebration accepts tap or Escape dismissal two seconds after it opens. Repeated attempts during the wait are ignored and do not extend it.

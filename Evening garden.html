@@ -532,6 +532,7 @@ function readFile(file){return new Promise((resolve,reject)=>{const reader=new F
 const settings=$('settings-dialog'),shiftDialog=$('shift-dialog'),iconDialog=$('icon-dialog'),profileDialog=$('profile-dialog'),choresDialog=$('chores-dialog'),nativeDialog=typeof settings.showModal==='function';
 if(!nativeDialog)for(const dialog of [settings,shiftDialog,iconDialog,profileDialog,choresDialog])dialog.classList.add('dialog-fallback');
 function showDialog(dialog){
+ cancelPendingCelebration();
  if(nativeDialog)dialog.showModal();
  else{dialog.open=true;dialog.setAttribute('open','');dialog.setAttribute('aria-modal','true');$('settings-backdrop').hidden=false;document.body.classList.add('settings-modal-open');document.querySelector('.topbar').setAttribute('aria-hidden','true');document.querySelector('main').setAttribute('aria-hidden','true');dialog.querySelector('.close-dialog').focus();}
 }
@@ -563,7 +564,7 @@ function escape(v){return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt
 function id(prefix){return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2,8)}`;}
 function kidStyle(kid,index=0){const t=R.kidTheme(kid.color||R.KID_COLORS[index%R.KID_COLORS.length]);return `--kid-bg:${t.bg};--kid-color:${t.color};--kid-ink:${t.ink}`;}
 function notify(message){clearTimeout(toastTimer);$('toast').textContent=message;$('toast').hidden=false;toastTimer=setTimeout(()=>$('toast').hidden=true,2200);}
-function selectState(){config=R.profileConfig(state);progress=state.profiles[state.activeProfileId].progress;todayConfig=R.effectiveConfig(config,progress);renderStamp='';}
+function selectState(){cancelPendingCelebration();rowHeightCache.clear();config=R.profileConfig(state);progress=state.profiles[state.activeProfileId].progress;todayConfig=R.effectiveConfig(config,progress);renderStamp='';}
 function save(){
  state.profiles[state.activeProfileId]={chores:config.chores,progress};state.kids=config.kids;state.format=config.format;state.celebrations=config.celebrations;
  if(blockedStorage)return;
@@ -600,7 +601,8 @@ function timelineTicks(){
 function done(kidId,choreId){return !!progress.done[R.completionKey(kidId,choreId)];}
 function assigned(kidId){return config.chores.filter(c=>c.kidIds.includes(kidId));}
 let timingProfile='',renderingTimeline=false;
-let resizeTimer,sizingStamp='';
+let resizeTimer,sizingStamp='',shiftPreviewStamp='';
+const rowHeightCache=new Map();
 function updateChoreTimings(now){
  const timings=R.choreTimings(todayConfig,progress,now);
  for(const panel of document.querySelectorAll('.chore-timing')){
@@ -610,6 +612,8 @@ function updateChoreTimings(now){
   if(visible)delete panel.dataset.sizingClock;
   panel.classList.toggle('timing-visible',!!visible);panel.classList.toggle('timing-overdue',kind==='overdue');
   panel.setAttribute('aria-hidden',String(!visible));panel.dataset.timing=kind||'hidden';
+  const row=panel.closest('.routine-row'),chore=todayConfig.chores.find(ch=>ch.id===panel.dataset.id);
+  if(row&&chore){const status=R.status(chore,now,chore.kidIds.every(kid=>done(kid,chore.id)));if(!row.classList.contains(status)){row.classList.remove('upcoming','current','past','done');row.classList.add(status);}}
  }
  if(!renderingTimeline)fitTimeline(now);
 }
@@ -641,16 +645,24 @@ function fitTimeline(now){
  if(stamp===sizingStamp)return;sizingStamp=stamp;
  const measure=document.createElement('div');measure.className='shared-chore';
  measure.style.cssText='position:fixed;left:-10000px;top:0;visibility:hidden;pointer-events:none;border:0;margin:0;padding:0;width:2000px;';
- const clones=rows.map(row=>{
-  const content=row.querySelector('.shared-chore-content'),clone=content.cloneNode(true),panel=clone.querySelector('.chore-timing'),original=content.querySelector('.chore-timing');
-  clone.style.cssText='position:static;flex:none;width:'+content.getBoundingClientRect().width+'px;';
-  const show=original.classList.contains('timing-visible')||original.dataset.sizingClock==='true';
+ const heights=Object.create(null),clones=[];
+ const font=getComputedStyle(rows[0].querySelector('.chore-title')).font;
+ if(rowHeightCache.size>400)rowHeightCache.clear();
+ for(const row of rows){
+  const content=row.querySelector('.shared-chore-content'),original=content.querySelector('.chore-timing'),chore=todayConfig.chores.find(ch=>ch.id===row.dataset.id);
+  const width=content.getBoundingClientRect().width,show=original.classList.contains('timing-visible')||original.dataset.sizingClock==='true';
+  const key=JSON.stringify([state.activeProfileId,chore.id,chore.title,chore.icon,chore.start,chore.end,config.format,width,font,show]);
+  if(rowHeightCache.has(key)){heights[chore.id]=rowHeightCache.get(key);continue;}
+  const clone=content.cloneNode(true),panel=clone.querySelector('.chore-timing');
+  clone.style.cssText='position:static;flex:none;width:'+width+'px;';
   panel.classList.toggle('timing-visible',show);panel.style.transition='none';panel.style.maxHeight=show?'none':'0';if(!show)panel.style.display='none';
-  measure.appendChild(clone);return {id:row.dataset.id,clone};
- });
- document.body.appendChild(measure);
- const heights=Object.create(null);for(const item of clones)heights[item.id]=Math.ceil(item.clone.getBoundingClientRect().height);
- measure.remove();
+  measure.appendChild(clone);clones.push({id:chore.id,key,clone});
+ }
+ if(clones.length){
+  document.body.appendChild(measure);
+  for(const item of clones){const height=Math.ceil(item.clone.getBoundingClientRect().height);heights[item.id]=height;rowHeightCache.set(item.key,height);}
+  measure.remove();
+ }
  const next=R.timeline(todayConfig,heights);
  const changed=!layout||next.height!==layout.height||next.rows.some((row,i)=>!layout.rows[i]||row.height!==layout.rows[i].height||row.top!==layout.rows[i].top);
  if(!changed)return;
@@ -675,6 +687,7 @@ function render(now){
   const chore=todayConfig.chores.find(c=>c.id===row.id),complete=chore.kidIds.every(k=>done(k,chore.id)),state=R.status(chore,now,complete),timing=previous[chore.id]||{visible:timings[chore.id]!=='hidden',late:timings[chore.id]==='overdue'};
   return `<div class="routine-row ${state}" data-id="${escape(chore.id)}" style="top:${previousRows[row.id]?previousRows[row.id].top:(row.top+4)+'px'};height:${previousRows[row.id]?previousRows[row.id].height:(row.height-8)+'px'}"><div class="shared-chore"><div class="shared-chore-content"><span class="chore-icon" aria-hidden="true">${iconMarkup(chore.icon)}</span><span class="chore-heading"><span class="chore-title">${escape(chore.title)}</span></span><span class="chore-timing${timing.visible?' timing-visible':''}${timing.late?' timing-overdue':''}" data-id="${escape(chore.id)}" aria-hidden="${!timing.visible}">${rangeClock(chore)}</span></div></div>${config.kids.map((kid,i)=>{const included=chore.kidIds.includes(kid.id),checked=included&&done(kid.id,chore.id);return `<div class="kid-cell${included?'':' unassigned'}${checked?' checked':''}" style="${kidStyle(kid,i)}">${included?`<label class="check-target"><input class="child-check" type="checkbox" data-kid="${escape(kid.id)}" data-id="${escape(chore.id)}" data-key="${escape(R.completionKey(kid.id,chore.id))}"${checked?' checked':''} aria-label="${escape(kid.name)}: ${escape(chore.title)}, ${escape(formatTime(chore.start))} to ${escape(formatTime(chore.end))}"></label>`:`<span class="not-assigned" aria-label="${escape(kid.name)}: not assigned">—</span>`}</div>`;}).join('')}</div>`;
  }).join('');
+ applyCheckboxLocks();
  // Commit the previous visibility before changing it, so rebuilt rows can also animate.
  void $('kid-columns').offsetWidth;updateChoreTimings(now);renderingTimeline=false;fitTimeline(now);updateTimelineMarks();
  if(focused){const previous=[...document.querySelectorAll('.child-check')].find(b=>b.dataset.key===focused);if(previous)previous.focus({preventScroll:true});}
@@ -684,22 +697,74 @@ function tick(force=false){
  const date=new Date(),now=R.timeOfDay(date),day=R.dayKey(date);if(progress.day!==day){progress=R.freshProgress(date);save();force=true;}
  todayConfig=R.effectiveConfig(config,progress,date);
  const time=timeString(now);$('digital-time').innerHTML=digits(time);const clock=$('main-clock');if(!clock.firstChild)clock.innerHTML=clockSvg(date.getHours(),date.getMinutes());clock.setAttribute('role','img');clock.setAttribute('aria-label',`Current time ${formatTime(time)}`);clock.querySelector('.hour-hand').setAttribute('transform',`rotate(${date.getHours()%12*30+date.getMinutes()*.5+date.getSeconds()/120} 100 100)`);clock.querySelector('.minute-hand').setAttribute('transform',`rotate(${date.getMinutes()*6+date.getSeconds()*.1} 100 100)`);
- const stamp=`${day}-${time}`;if(force||stamp!==renderStamp){render(now);renderStamp=stamp;if(shiftDialog.open)refreshShiftPreview();}updateNow(now);updateChoreTimings(now);
+ const stamp=`${day}-${state.activeProfileId}`;if(force||stamp!==renderStamp){render(now);renderStamp=stamp;}
+ if(shiftDialog.open&&shiftPreviewStamp!==time){refreshShiftPreview();shiftPreviewStamp=time;}
+ updateNow(now);updateChoreTimings(now);
  const active=todayConfig.chores.some(c=>R.onTime(c,now)&&c.kidIds.some(k=>!done(k,c.id))),next=todayConfig.chores.find(c=>R.minutes(c.start)>now&&c.kidIds.some(k=>!done(k,c.id))),left=next?Math.ceil(R.minutes(next.start)-now):0;$('starts-in').textContent=!active&&next?`${formatTime(next.start)} · ${left>=60?`${Math.floor(left/60)}h `:''}${left%60}m`:'';
 }
 function jumpNow(){if(!layout||!config.chores.length)return;const now=R.timeOfDay(new Date()),target=(now<layout.start?R.minutes(todayConfig.chores[0].start):(now>layout.end?R.minutes(todayConfig.chores[todayConfig.chores.length-1].start):now));$('schedule-scroll').scrollTo({top:Math.max(0,R.position(layout,target)-90),behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});}
 $('jump-now').addEventListener('click',jumpNow);
+function refreshCompletionView(kidId,choreId){
+ const row=[...$('kid-columns').querySelectorAll('.routine-row')].find(item=>item.dataset.id===choreId),chore=config.chores.find(ch=>ch.id===choreId);
+ if(row&&chore){
+  const complete=chore.kidIds.every(kid=>done(kid,choreId));
+  row.classList.remove('upcoming','current','past','done');row.classList.add(R.status(todayConfig.chores.find(ch=>ch.id===choreId)||chore,R.timeOfDay(new Date()),complete));
+  for(const box of row.querySelectorAll('.child-check')){box.checked=done(box.dataset.kid,choreId);box.closest('.kid-cell').classList.toggle('checked',box.checked);}
+ }
+ const index=config.kids.findIndex(kid=>kid.id===kidId),head=document.querySelectorAll('.kid-head')[index];
+ if(head){const chores=assigned(kidId),n=chores.filter(ch=>done(kidId,ch.id)).length,bar=head.querySelector('.kid-progress');bar.setAttribute('aria-valuenow',String(n));bar.setAttribute('aria-valuetext',`${n} of ${chores.length}`);bar.querySelector('i').style.width=(chores.length?n/chores.length*100:0)+'%';head.querySelector('.kid-score').innerHTML=n+'/'+chores.length+(chores.length&&n===chores.length?uiIcon('check'):'');}
+}
+const TAP_GUARD_MS=2000;
+const checkboxLocks=new Set();
+let celebrationDismissAfter=0;
+function checkboxLockKey(box){
+ return JSON.stringify([state.activeProfileId,progress.day,box.dataset.key]);
+}
+function applyCheckboxLocks(){
+ for(const box of $('kid-columns').querySelectorAll('.child-check')){
+  box.disabled=checkboxLocks.has(checkboxLockKey(box));
+ }
+}
+function lockCheckbox(box){
+ const key=checkboxLockKey(box);
+ checkboxLocks.add(key);
+ box.disabled=true;
+ setTimeout(()=>{
+  checkboxLocks.delete(key);
+  applyCheckboxLocks();
+ },TAP_GUARD_MS);
+}
+let celebrationRequest=0;
+function cancelPendingCelebration(){celebrationRequest++;}
+function queueCelebration(choice,childName,key){
+ const request=++celebrationRequest,profile=state.activeProfileId,day=progress.day;
+ // Give the checked box a rendered frame before constructing the overlay.
+ requestAnimationFrame(()=>{if(request!==celebrationRequest)return;requestAnimationFrame(()=>{
+  if(request!==celebrationRequest||profile!==state.activeProfileId||day!==progress.day||day!==R.dayKey(new Date())||!progress.done[key]||document.hidden)return;
+  celebrate(choice,childName);
+ });});
+}
 $('kid-columns').addEventListener('change',event=>{
- const button=event.target.closest('.child-check');if(!button)return;const kidId=button.dataset.kid,choreId=button.dataset.id,wasChecked=button.checked;tick();const kid=config.kids.find(k=>k.id===kidId),chore=todayConfig.chores.find(c=>c.id===choreId&&c.kidIds.includes(kidId));if(!kid||!chore)return;
- const key=R.completionKey(kidId,choreId),undo=!wasChecked,date=new Date();
- if(progress.day!==R.dayKey(date)){progress=R.freshProgress(date);todayConfig=R.effectiveConfig(config,progress,date);}
- if(undo){delete progress.done[key];save();tick(true);dismissCelebration();return;}
+ const button=event.target.closest('.child-check');if(!button)return;
+ cancelPendingCelebration();
+ const kidId=button.dataset.kid,choreId=button.dataset.id,wasChecked=button.checked,date=new Date();
+ if(progress.day!==R.dayKey(date)){progress=R.freshProgress(date);renderStamp='';}
+ todayConfig=R.effectiveConfig(config,progress,date);
+ const kid=config.kids.find(k=>k.id===kidId),chore=todayConfig.chores.find(c=>c.id===choreId&&c.kidIds.includes(kidId));if(!kid||!chore)return;
+ lockCheckbox(button);
+ const key=R.completionKey(kidId,choreId),undo=!wasChecked;
+ if(undo){delete progress.done[key];save();refreshCompletionView(kidId,choreId);tick();dismissCelebration();return;}
  progress.done[key]={at:date.toISOString()};
  const flags=R.celebrationFlags(todayConfig,progress,kidId,choreId,R.timeOfDay(date));
  const result=R.assignCelebration(config,progress,kidId,choreId,flags,date);
- progress=result.progress;save();tick(true);
- if(config.celebrations)celebrate(result.celebration,kid.name);else notify(`${kid.name}: done!`);
+ progress=result.progress;save();refreshCompletionView(kidId,choreId);tick();
+ if(config.celebrations)queueCelebration(result.celebration,kid.name,key);else notify(`${kid.name}: done!`);
 });
+$('kid-columns').addEventListener('click',event=>{
+ const label=event.target.closest('.check-target');
+ // Firefox 68 can toggle a disabled input through its label.
+ if(label&&label.querySelector('.child-check').disabled)event.preventDefault();
+},true);
 const celebrationThemes=[
  ['🌟','A little star!','Look at you shine.','✦','burst'],['🦋','Look at you grow!','One lovely step at a time.','🦋','float'],['🎈','Up, up, hooray!','You did your little step.','🎈','float'],['🌸','Beautifully done!','Our evening is blooming.','🌸','rain'],['🚀','You’re soaring!','A little closer to dreamland.','✧','burst'],['🐝','What a busy bee!','Time for a happy little wiggle.','🐝','orbit'],['🌈','A splash of happy!','You made this moment brighter.','●','rain'],['✨','Sparkle time!','Look at that little win.','✦','orbit'],['🐸','Hip, hip, hop!','You did it. Give a little hop!','●','bounce'],['🫧','Pop! Well done!','A bubbly little celebration.','○','float'],['🍓','Sweet little win!','That was berry well done.','🍓','rain'],['🌻','Hello, sunshine!','A little step. A happy heart.','✿','burst'],['🐞','Lucky little you!','Another step, all done.','🐞','bounce'],['🎉','Hooray for you!','A little cheer for a lovely effort.','▰','rain'],['🐠','Just keep swimming!','You’re doing swimmingly.','🐠','float'],['💛','A heart full of happy!','You can be proud of yourself.','♥','burst'],['🪁','Flying high!','Look how far you’ve come.','◆','orbit'],['🍂','A gentle little cheer!','One step closer to cozy.','🍂','rain'],['🐇','Hop to the happy!','A lovely little leap forward.','✧','bounce'],['🌙','Dreamland is closer!','You’re making a lovely evening.','★','float']
 ];
@@ -712,6 +777,7 @@ const lateReminders=[
  'Finished! Shall we race the clock next time?'
 ];
 function celebrate(celebration=null,childName='') {
+ cancelPendingCelebration();
  clearTimeout(toastTimer);$('toast').hidden=true;
  const choice=celebration||R.makeCelebration(),{grand,everyone,late}=choice,index=choice.theme,random=R.celebrationRandom(choice.seed);
  const daytime=state.activeProfileId!=='evening',theme=celebrationThemes[index].slice();
@@ -724,10 +790,15 @@ function celebrate(celebration=null,childName='') {
  $('celebration-subtitle').textContent=late?(everyone?'Everyone: all done!':grand?`${childName}: all done!`:`${childName}, you finished!`):childName&&!grand?childName:'';
  layer.querySelector('.celebration-particles').innerHTML=Array.from({length:late?8:grand?64:30},(_,i)=>{const a=(i/(late?8:grand?64:30))*Math.PI*2,d=120+random()*300,colors=['#d8b35b','#a0b67e','#b19bc5','#d59678','#7ca6a1'];return `<span class="particle" style="--x:${Math.cos(a)*d}px;--y:${Math.sin(a)*d}px;--r:${180+random()*540}deg;--size:${24+random()*30}px;--color:${colors[i%colors.length]};--duration:${1.5+random()*1.3}s;--delay:${random()*.4}s">${iconMarkup(particle)}</span>`;}).join('');
  layer.hidden=false;
+ celebrationDismissAfter=performance.now()+TAP_GUARD_MS;
 }
-function dismissCelebration(){$('celebration').hidden=true;replaceChildren($('celebration').querySelector('.celebration-particles'));}
-$('celebration').addEventListener('click',dismissCelebration);
-document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!$('celebration').hidden){event.preventDefault();dismissCelebration();}});
+function dismissCelebration(){cancelPendingCelebration();$('celebration').hidden=true;replaceChildren($('celebration').querySelector('.celebration-particles'));}
+function dismissCelebrationFromInput(){
+ if(performance.now()<celebrationDismissAfter)return;
+ dismissCelebration();
+}
+$('celebration').addEventListener('click',dismissCelebrationFromInput);
+document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!$('celebration').hidden){event.preventDefault();dismissCelebrationFromInput();}});
 function kidRow(kid,index){
  const row=document.createElement('div');row.className='kid-editor-row';row.dataset.id=kid.id;row.style.cssText=kidStyle(kid,index);
  row.innerHTML=`<input class="kid-name-input" maxlength="30" value="${escape(kid.name)}" placeholder="Child’s name" aria-label="Child name" required><label class="kid-color-field"><span>Color</span><input class="kid-color" type="color" value="${escape(kid.color||R.KID_COLORS[index%R.KID_COLORS.length])}" aria-label="Child color" title="Choose this child’s color"></label><button type="button" class="delete-kid" aria-label="Remove child">${uiIcon('close')}</button>`;
@@ -947,11 +1018,11 @@ $('fullscreen').addEventListener('click',async()=>{
 });
 document.addEventListener('fullscreenchange',syncFullscreenAwake);
 document.addEventListener('click',()=>{if(document.fullscreenElement&&$('fullscreen').dataset.awake==='failed')screenAwake.enable();});
-window.addEventListener('pagehide',()=>screenAwake.disable());
+window.addEventListener('pagehide',()=>{cancelPendingCelebration();screenAwake.disable();});
 window.addEventListener('pageshow',syncFullscreenAwake);
 
 window.addEventListener('storage',event=>{if(event.key===KEY||event.key===null){dismissCelebration();if(iconDialog.open)closeIconPicker();if(choresDialog.open)closeChores();if(settings.open)closeSettings();if(shiftDialog.open)closeShift();if(profileDialog.open)closeProfile();load();tick(true);notify('Data changed in another tab. Unsaved editors have been closed.');}});
-document.addEventListener('visibilitychange',()=>{if(!document.hidden)tick(true);syncFullscreenAwake();});
+document.addEventListener('visibilitychange',()=>{if(document.hidden)cancelPendingCelebration();else tick(true);syncFullscreenAwake();});
 for(const placeholder of document.querySelectorAll('[data-ui-icon]'))placeholder.innerHTML=uiIcon(placeholder.dataset.uiIcon);
 load();tick(true);$('startup-warning').hidden=true;requestAnimationFrame(jumpNow);setInterval(tick,1000);
 if('serviceWorker'in navigator&&location.protocol!=='file:'&&!document.documentElement.dataset.standalone)navigator.serviceWorker.register('./sw.js').catch(()=>{});

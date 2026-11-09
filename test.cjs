@@ -309,3 +309,72 @@ test('measured timeline fits compact rows, clocks and long titles while mapping 
  for(let i=1;i<expanded.rows.length;i++)assert.ok(expanded.rows[i].top>=expanded.rows[i-1].top+expanded.rows[i-1].height);
  let previous=-1;for(let t=expanded.start;t<=expanded.end;t+=.25){const y=R.position(expanded,t);assert.ok(y>=previous);previous=y;}
 });
+
+function queuedCelebrationHarness(){
+ const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),source=fs.readFileSync(path.join(__dirname,'app.js'),'utf8');
+ const section=source.slice(source.indexOf('let celebrationRequest='),source.indexOf("$('kid-columns').addEventListener('change'"));
+ const frames=[],shown=[],state={activeProfileId:'evening'},progress={day:R.dayKey(new Date()),done:{box:{at:new Date().toISOString()}}},document={hidden:false};
+ const api=vm.runInNewContext(section+';({queueCelebration,cancelPendingCelebration})',{R,state,progress,document,requestAnimationFrame:fn=>frames.push(fn),celebrate:(...args)=>shown.push(args)});
+ return {api,frames,shown,state,progress,document,frame(){const frame=frames.shift();if(frame)frame();}};
+}
+test('celebration waits for a checked frame rather than blocking the input event',()=>{
+ const h=queuedCelebrationHarness(),choice={theme:2};h.api.queueCelebration(choice,'Child','box');
+ assert.equal(h.shown.length,0);h.frame();assert.equal(h.shown.length,0);h.frame();assert.equal(h.shown.length,1);assert.equal(h.shown[0][0],choice);
+});
+test('queued celebration cancels on undo, profile change, date change, hidden page or explicit cancellation',()=>{
+ for(const cancel of [h=>delete h.progress.done.box,h=>h.state.activeProfileId='morning',h=>h.progress.day='2000-01-01',h=>h.document.hidden=true,h=>h.api.cancelPendingCelebration()]){
+  const h=queuedCelebrationHarness();h.api.queueCelebration({},'Child','box');h.frame();cancel(h);h.frame();assert.equal(h.shown.length,0);
+ }
+});
+test('only the latest queued celebration opens after rapid successive actions',()=>{
+ const h=queuedCelebrationHarness(),first={theme:1},latest={theme:2};h.api.queueCelebration(first,'Child','box');h.api.queueCelebration(latest,'Child','box');
+ while(h.frames.length)h.frame();assert.equal(h.shown.length,1);assert.equal(h.shown[0][0],latest);
+});
+
+
+function checkboxLockHarness(){
+ const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
+ const source=fs.readFileSync(path.join(__dirname,'app.js'),'utf8');
+ const section=source.slice(source.indexOf('const TAP_GUARD_MS='),source.indexOf('let celebrationRequest='));
+ const state={activeProfileId:'evening'},progress={day:'2026-11-09'},timers=[];
+ const boxes=[{dataset:{key:'child-1:supper'},disabled:false},{dataset:{key:'child-2:supper'},disabled:false}];
+ let now=0;
+ const api=vm.runInNewContext(section+';({lockCheckbox,applyCheckboxLocks})',{
+  state,progress,$:()=>({querySelectorAll:()=>boxes}),
+  setTimeout(callback,delay){timers.push({callback,at:now+delay});}
+ });
+ return {api,state,progress,boxes,advance(milliseconds){
+  now+=milliseconds;
+  for(const timer of timers.filter(timer=>timer.at<=now)){
+   timers.splice(timers.indexOf(timer),1);
+   timer.callback();
+  }
+ }};
+}
+test('a checkbox ignores repeat taps for two seconds independently of other children',()=>{
+ const h=checkboxLockHarness();
+ h.api.lockCheckbox(h.boxes[0]);
+ assert.equal(h.boxes[0].disabled,true);
+ assert.equal(h.boxes[1].disabled,false);
+ h.advance(1999);
+ assert.equal(h.boxes[0].disabled,true);
+ h.advance(1);
+ assert.equal(h.boxes[0].disabled,false);
+});
+test('checkbox locks survive row replacement and stay scoped to the profile and day',()=>{
+ const h=checkboxLockHarness();
+ h.api.lockCheckbox(h.boxes[0]);
+ h.boxes[0]={dataset:{key:'child-1:supper'},disabled:false};
+ h.api.applyCheckboxLocks();
+ assert.equal(h.boxes[0].disabled,true);
+ h.state.activeProfileId='morning';h.api.applyCheckboxLocks();
+ assert.equal(h.boxes[0].disabled,false);
+ h.state.activeProfileId='evening';h.api.applyCheckboxLocks();
+ assert.equal(h.boxes[0].disabled,true);
+ h.progress.day='2026-11-10';h.api.applyCheckboxLocks();
+ assert.equal(h.boxes[0].disabled,false);
+ h.progress.day='2026-11-09';h.api.applyCheckboxLocks();
+ assert.equal(h.boxes[0].disabled,true);
+ h.advance(2000);
+ assert.equal(h.boxes[0].disabled,false);
+});
