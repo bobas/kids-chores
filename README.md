@@ -4,6 +4,22 @@ A small, private evening-routine app for a shared family tablet. No accounts, an
 
 The complete user experience specification describes family workflows and comparison scenarios for a rewrite. [App description](APP-USER-SPECIFICATION.md)
 
+## GitHub Pages
+
+The workflow in [.github/workflows/deploy-pages.yml](.github/workflows/deploy-pages.yml) tests and builds both language versions and publishes them together on pushes to `main` or `czech-translation`. It can also run manually through **Actions → Deploy English and Czech → Run workflow**.
+
+| Version | Source branch | URL |
+| --- | --- | --- |
+| English | `main` | https://bobas.github.io/kids-chores/ |
+| Czech | `czech-translation` | https://bobas.github.io/kids-chores/cs/ |
+
+1. Keep the same workflow in both branches. With the usual Git workflow, commit it to `main` and rebase `czech-translation` onto it, then push both branches.
+2. Open **Settings → Pages → Build and deployment** and select **GitHub Actions** as the **Source**.
+3. If **Settings → Environments → github-pages** restricts deployment branches, allow both `main` and `czech-translation`.
+4. Run the workflow manually or push another change to either branch.
+
+Both URLs share saved children, chores, and daily progress within the same browser. The build gives each language version separate offline caches. The published files include the app, standalone HTML, and licenses.
+
 ## Run on a tablet (recommended)
 
 1. Extract this folder on a computer connected to your home Wi-Fi.

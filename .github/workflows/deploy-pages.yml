@@ -1,0 +1,86 @@
+name: Deploy English and Czech
+
+# Keep this workflow in both main and czech-translation.
+on:
+  push:
+    branches:
+      - main
+      - czech-translation
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Finish an active deployment before deploying the latest pending changes.
+concurrency:
+  group: github-pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out English version
+        uses: actions/checkout@v6
+        with:
+          ref: main
+          path: english
+          persist-credentials: false
+
+      - name: Check out Czech version
+        uses: actions/checkout@v6
+        with:
+          ref: czech-translation
+          path: czech
+          persist-credentials: false
+
+      - name: Test and build both versions
+        shell: bash
+        run: |
+          for source in english czech; do
+            node "$source/test.cjs"
+            python3 "$source/build.py"
+          done
+
+      - name: Assemble the Pages site
+        shell: bash
+        run: |
+          mkdir -p _site/cs
+          assets=(
+            index.html style.css app.js routine.js
+            icon.svg manifest.webmanifest sw.js
+            "Evening garden.html"
+            LICENSE-TWEMOJI.txt LICENSE-NOSLEEP.txt
+          )
+          for asset in "${assets[@]}"; do
+            cp "english/$asset" "_site/$asset"
+            cp "czech/$asset" "_site/cs/$asset"
+          done
+
+          # Each version manages only its own offline caches.
+          sed -i 's/evening-garden-/kids-chores-pages-en-/g' _site/sw.js
+          sed -i 's/evening-garden-/kids-chores-pages-cs-/g' _site/cs/sw.js
+
+      - name: Upload the Pages site
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
