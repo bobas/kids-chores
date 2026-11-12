@@ -181,6 +181,7 @@ function profileConfig(state,id=state.activeProfileId){return {version:2,kids:st
 function freshState(date=new Date()){
  const c=defaults(),profiles=Object.create(null);
  for(const id of PROFILE_IDS)profiles[id]={chores:[],progress:freshProgress(date)};
+ profiles.evening.chores=c.chores;
  return {version:3,kids:c.kids,format:c.format,celebrations:c.celebrations,activeProfileId:'evening',profiles};
 }
 function validateState(input,date=new Date()){

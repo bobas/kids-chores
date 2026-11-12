@@ -1,6 +1,6 @@
 # Daily chores planner — user experience specification
 
-Reference date: 10 November 2026.
+Reference date: 12 November 2026.
 
 This document describes the existing app as experienced by children and parents. It is intended to guide an independent rewrite and the subsequent comparison of the two versions. It specifies observable behavior, visual relationships, and user workflows, without prescribing source structure, programming language, frameworks, drawing techniques, or a storage schema.
 
@@ -75,7 +75,18 @@ The display orders chores by start time. Parents edit times to change their chro
 
 ## 3. First launch and everyday startup
 
-A fresh installation starts with two placeholder children, **Dítě 1 / Child 1** and **Dítě 2 / Child 2**, with different default colors. The Evening profile is initially selected. All five profiles start empty. The initial time format is 24-hour, and celebrations are enabled.
+A fresh installation starts with two placeholder children, **Dítě 1 / Child 1** and **Dítě 2 / Child 2**, with different default colors. The Evening profile is initially selected and contains the original six example chores, all assigned to both children. All boxes start unchecked. The initial time format is 24-hour, and celebrations are enabled.
+
+| Example chore | Czech label | Start | End |
+| --- | --- | --- | --- |
+| Supper | Večeře | 18:00 | 18:45 |
+| Pajamas | Pyžámko | 18:50 | 19:00 |
+| Teeth | Vyčistit zoubky | 19:15 | 19:30 |
+| Prayer | Modlitba | 19:35 | 19:45 |
+| Toilet | Na záchod | 19:50 | 19:55 |
+| Bed | Do postýlky | 20:00 | 20:10 |
+
+Morning, Forenoon, Noon, and Afternoon start empty. The examples make the timetable usable immediately and can be edited or removed through Menu → Chores. They are used when there is no saved family setup. Saving an empty profile records that deliberate setup for subsequent visits.
 
 An empty profile still shows the current clock, toolbar, profile heading, children, and zero progress. Instead of an empty or broken timetable, it displays a short explanation and an **Add chores / Přidat úkoly** button. That button opens the Chores editor directly.
 
@@ -84,7 +95,7 @@ A typical first-use workflow is:
 1. Open the hamburger menu and choose Settings.
 2. Rename the children, choose their colors, and save by closing Settings.
 3. Open the menu and select the desired profile.
-4. Open Chores, add the routine, choose pictures and assignments, and close to save.
+4. Open Chores, adjust the examples or add a routine to an empty profile, choose pictures and assignments, and close to save.
 5. Repeat for the other profiles as needed.
 
 On subsequent visits, the app restores the family setup, selected profile, and valid progress for the current local date. It initially positions the timetable near the current time rather than requiring the family to scroll from the beginning of a long routine.
@@ -547,9 +558,10 @@ Use a synthetic family and equivalent chore definitions in both apps. Control th
 
 | ID | Action or situation | Expected observation |
 | --- | --- | --- |
-| START-1 | Open a fresh setup | Two placeholder children, empty Evening profile, 24-hour clock, celebrations enabled, Add chores action |
+| START-1 | Open a fresh setup | Two placeholder children, six unchecked example Evening chores assigned to both, 0/6 per child, 24-hour clock, celebrations enabled |
 | START-2 | Open each of the other four profiles | Each is independently empty; no invented default chores or completion celebration |
 | START-3 | Restart after selecting Morning | Morning is still selected |
+| START-4 | Remove every example from Evening, save, and reload or import an empty setup | The saved empty profile appears with 0/0 and Add chores |
 | VIEW-1 | Display shared and child-specific chores | One row per chore; separate child boxes; dashes for unassigned children; timing group appears only when relevant |
 | VIEW-2 | Check only one child's box on a shared chore | Only that child's progress changes; shared chore is not light green; an overdue clock remains visible while another child is unfinished |
 | VIEW-3 | Check all assigned boxes, then uncheck one | Shared completion green appears, then disappears |

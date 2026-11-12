@@ -233,11 +233,39 @@ test('reset restores original times after multiple shifts while preserving compl
  assert.equal(R.undoShift(c,newShift,date).offsets,undefined);
 });
 
-test('profiles start empty and reject older storage and backup formats',()=>{
- const s=R.freshState(date());assert.equal(s.activeProfileId,'evening');
- assert.equal(R.validateState(s,date()).version,3);
- for(const id of R.PROFILE_IDS){assert.equal(s.profiles[id].chores.length,0);assert.equal(R.timeline(R.profileConfig(s,id)).height,0);}
+test('new setups show the original evening examples and keep other profiles empty',()=>{
+ const state=R.freshState(date()),examples=R.defaults();
+ assert.equal(state.activeProfileId,'evening');
+ assert.equal(state.kids.length,2);
+ assert.equal(state.format,'24');
+ assert.equal(state.celebrations,true);
+ assert.equal(state.profiles.evening.chores.length,6);
+ assert.deepEqual(state.profiles.evening.chores,examples.chores);
+ assert.equal(R.timeline(R.profileConfig(state)).rows.length,6);
+ assert.equal(R.validateState(state,date()).version,3);
+ for(const id of R.PROFILE_IDS){
+  assert.equal(Object.keys(state.profiles[id].progress.done).length,0);
+  if(id!=='evening'){
+   assert.equal(state.profiles[id].chores.length,0);
+   assert.equal(R.timeline(R.profileConfig(state,id)).height,0);
+  }
+ }
  for(const old of [{config:R.defaults(),progress:R.freshProgress(date())},R.defaults(),{version:1}])assert.throws(()=>R.importState(old));
+});
+test('saved and imported empty profiles preserve the family setup instead of restoring examples',()=>{
+ const state=R.freshState(date());
+ for(const id of R.PROFILE_IDS)state.profiles[id].chores=[];
+ state.kids[0].name='Family child';
+ state.kids[0].color='#123456';
+ state.activeProfileId='morning';
+ const saved=R.validateState(JSON.parse(JSON.stringify(state)),date());
+ const imported=R.importState(R.exportState(saved),date());
+ for(const restored of [saved,imported]){
+  assert.equal(restored.kids[0].name,'Family child');
+  assert.equal(restored.kids[0].color,'#123456');
+  assert.equal(restored.activeProfileId,'morning');
+  for(const id of R.PROFILE_IDS)assert.equal(restored.profiles[id].chores.length,0);
+ }
 });
 test('profiles isolate duplicate chore ids, completion rewards and shifts across reload and midnight',()=>{
  let s=R.freshState(date());for(const id of ['morning','evening'])s.profiles[id].chores=R.defaults().chores;
